@@ -26,6 +26,7 @@ const { values, positionals } = parseArgs({
     model: { type: "string", short: "m" },
     "max-turns": { type: "string" },
     verbose: { type: "boolean", short: "v", default: false },
+    voice: { type: "string" },
   },
   allowPositionals: true,
   strict: false,
@@ -199,7 +200,7 @@ function showHelp(): void {
   console.log("  task list [status]   List tasks");
   console.log("  task cancel <id>     Cancel a pending task");
   console.log("  heartbeat            Trigger a heartbeat cycle");
-  console.log("  say <text>           Speak text aloud via macOS TTS");
+  console.log("  say [--voice <name>] <text>   Speak text aloud via macOS TTS");
   console.log("  login                Authenticate the Claude CLI");
   console.log("\nOptions:");
   console.log("  -h, --help           Show this help");
@@ -531,19 +532,22 @@ async function cmdHeartbeat(): Promise<void> {
 async function cmdSay(args: string[]): Promise<void> {
   const text = args.join(" ");
   if (!text) {
-    console.error("Usage: fryler say <text>");
+    console.error("Usage: fryler say [--voice <name>] <text>");
     process.exit(1);
   }
+
+  const voice = values.voice as string | undefined;
 
   const isContainer = process.env.FRYLER_CONTAINER === "1";
   if (isContainer) {
     // Inside container: write to the outbox for the host to pick up
     const { writeSayAction } = await import("@/outbox/index.ts");
-    await writeSayAction(text);
+    await writeSayAction(text, voice);
     console.log("Queued say action.");
   } else {
     // On host: run say directly
-    const proc = Bun.spawn(["say", text], {
+    const sayArgs = voice ? ["-v", voice, text] : [text];
+    const proc = Bun.spawn(["say", ...sayArgs], {
       stdout: "inherit",
       stderr: "inherit",
     });
