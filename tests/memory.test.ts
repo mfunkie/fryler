@@ -1,12 +1,31 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import { join } from "path";
 import { unlinkSync, existsSync } from "fs";
-import { getProjectRoot, readSoul, readMemory, getIdentityContext } from "../src/memory/index";
+import {
+  getProjectRoot,
+  getIdentityDir,
+  initIdentityFiles,
+  readSoul,
+  readMemory,
+  getIdentityContext,
+} from "../src/memory/index";
 
 describe("memory", () => {
   test("getProjectRoot points to repo root", () => {
     const root = getProjectRoot();
     expect(existsSync(join(root, "package.json"))).toBe(true);
+  });
+
+  test("getIdentityDir returns project root when not in container", () => {
+    // On the host (no FRYLER_CONTAINER env), identity dir === project root
+    const dir = getIdentityDir();
+    const root = getProjectRoot();
+    expect(dir).toBe(root);
+  });
+
+  test("initIdentityFiles is a no-op on the host", () => {
+    // Should not throw or modify anything
+    initIdentityFiles();
   });
 
   test("readSoul returns SOUL.md content", async () => {
@@ -32,9 +51,7 @@ describe("memory", () => {
       // Seed a temp file
       await Bun.write(tempPath, "# Existing content\n");
 
-      // Monkey-patch getProjectRoot is not feasible, so we test appendMemory
-      // on the real MEMORY.md indirectly. Instead, replicate the logic on a temp file
-      // to prove append semantics.
+      // Replicate the append logic on a temp file to prove append semantics.
       const file = Bun.file(tempPath);
       const existing = await file.text();
       const entry = "Learned something new";

@@ -1,19 +1,21 @@
 /**
  * Daemon lifecycle: start, run loop, shutdown.
  *
- * On start: acquire PID, start container, init DB, read identity files, start heartbeat.
- * On stop: stop heartbeat, destroy container, remove PID.
+ * On start: acquire PID, init identity files, init DB, read identity, start heartbeat.
+ * On stop: stop heartbeat, close DB, remove PID.
+ *
+ * Container lifecycle is managed externally by the host proxy (src/proxy).
+ * The daemon runs directly inside the container (or on the host for dev).
  */
 
 import { logger } from "../logger/index.ts";
 import { acquirePid, removePid, isRunning, readPid } from "./pid.ts";
 import { registerSignalHandlers } from "./signals.ts";
 import { startHeartbeat, stopHeartbeat, triggerHeartbeat } from "./heartbeat.ts";
-import { startContainer, destroyContainer, getContainerStatus } from "../container/manager.ts";
+import { getContainerStatus } from "../container/manager.ts";
 import { getDb, closeDb } from "../db/index.ts";
 import { getConfig } from "../config/index.ts";
-import { readSoul, readMemory } from "../memory/index.ts";
-import type { FrylerConfig } from "../config/index.ts";
+import { readSoul, readMemory, initIdentityFiles } from "../memory/index.ts";
 
 let daemonRunning = false;
 
@@ -36,10 +38,13 @@ async function startDaemon(): Promise<void> {
 
   // Register signal handlers for graceful shutdown
   registerSignalHandlers(async () => {
-    await shutdownDaemon(config);
+    await shutdownDaemon();
   });
 
   try {
+    // Initialize identity files (copies defaults on first container run)
+    initIdentityFiles();
+
     // Initialize database
     getDb();
     logger.info("Database initialized");
@@ -50,12 +55,6 @@ async function startDaemon(): Promise<void> {
     logger.info("Identity files loaded", {
       soulLength: soul.length,
       memoryLength: memory.length,
-    });
-
-    // Start container
-    await startContainer({
-      image: config.container_image,
-      name: config.container_name,
     });
 
     // Start heartbeat loop
@@ -76,7 +75,7 @@ async function startDaemon(): Promise<void> {
     logger.error("Failed to start daemon", {
       error: err instanceof Error ? err.message : String(err),
     });
-    await shutdownDaemon(config);
+    await shutdownDaemon();
     process.exit(1);
   }
 }
@@ -115,7 +114,7 @@ async function stopDaemon(): Promise<void> {
 /**
  * Internal shutdown sequence.
  */
-async function shutdownDaemon(config: FrylerConfig): Promise<void> {
+async function shutdownDaemon(): Promise<void> {
   if (!daemonRunning) return;
   daemonRunning = false;
 
@@ -123,15 +122,6 @@ async function shutdownDaemon(config: FrylerConfig): Promise<void> {
 
   stopHeartbeat();
   logger.info("Heartbeat stopped");
-
-  try {
-    await destroyContainer(config.container_name);
-    logger.info("Container destroyed");
-  } catch (err) {
-    logger.warn("Failed to destroy container", {
-      error: err instanceof Error ? err.message : String(err),
-    });
-  }
 
   closeDb();
   logger.info("Database closed");

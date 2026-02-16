@@ -6,7 +6,7 @@
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { askStreaming, type AskOptions } from "@/claude/client.ts";
-import { createSession, updateSession } from "@/db/sessions.ts";
+import { createSession, getSession, updateSession } from "@/db/sessions.ts";
 import { parseClaudeResponse } from "@/tasks/parser.ts";
 import { createTask } from "@/db/tasks.ts";
 import { createMemory } from "@/db/memories.ts";
@@ -88,6 +88,10 @@ async function startRepl(options?: ReplOptions): Promise<void> {
                 currentText += block.text;
               }
             }
+            // New assistant turn (after tool use) — text resets, so reset our counter
+            if (currentText.length < lastTextLength) {
+              lastTextLength = 0;
+            }
             // Print only new characters since last update
             if (currentText.length > lastTextLength) {
               process.stdout.write(currentText.slice(lastTextLength));
@@ -115,7 +119,10 @@ async function startRepl(options?: ReplOptions): Promise<void> {
       if (resultSessionId) {
         if (!sessionId) {
           sessionId = resultSessionId;
-          createSession(sessionId, `[chat] ${input.slice(0, 80)}`);
+          // Only create if not already tracked (e.g. auto-resumed via --continue)
+          if (!getSession(sessionId)) {
+            createSession(sessionId, `[chat] ${input.slice(0, 80)}`);
+          }
         }
         hasExchanged = true;
         messageCount++;

@@ -17,6 +17,7 @@ export interface ContainerConfig {
   workdir?: string;
   cpus?: number;
   memory?: string;
+  command?: string[];
 }
 
 export interface ExecResult {
@@ -109,8 +110,9 @@ function buildRunArgs(config: ContainerConfig): string[] {
 }
 
 /**
- * Start a persistent container in the background.
- * Runs `sleep infinity` to keep it alive for exec commands.
+ * Start a container in the background.
+ * If config.command is provided, it is used as the entrypoint args.
+ * Otherwise falls back to `sleep infinity` to keep it alive for exec commands.
  */
 async function startContainer(config: ContainerConfig): Promise<void> {
   if (!(await isContainerAvailable())) {
@@ -129,7 +131,8 @@ async function startContainer(config: ContainerConfig): Promise<void> {
   await removeContainer(config.name).catch(() => {});
 
   const args = buildRunArgs(config);
-  args.push("/bin/sh", "-c", "sleep infinity");
+  const cmd = config.command ?? ["/bin/sh", "-c", "sleep infinity"];
+  args.push(...cmd);
 
   logger.info("Starting container", { name: config.name, image: config.image });
 
@@ -264,6 +267,33 @@ async function getContainerStatus(name: string): Promise<ContainerStatus> {
 }
 
 /**
+ * Build a container image from a Dockerfile.
+ */
+async function buildImage(tag: string, contextDir: string, dockerfile?: string): Promise<void> {
+  const args = ["container", "build", "--tag", tag];
+  if (dockerfile) {
+    args.push("--file", dockerfile);
+  }
+  args.push(contextDir);
+
+  logger.info("Building container image", { tag, contextDir });
+
+  const proc = Bun.spawn(args, {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+
+  const stderr = await new Response(proc.stderr).text();
+  const exitCode = await proc.exited;
+
+  if (exitCode !== 0) {
+    throw new Error(`Failed to build image ${tag}: ${stderr}`);
+  }
+
+  logger.info("Image built", { tag });
+}
+
+/**
  * Stop and remove the container. Graceful shutdown.
  */
 async function destroyContainer(name: string): Promise<void> {
@@ -286,6 +316,7 @@ function formatUptime(ms: number): string {
 export {
   isContainerAvailable,
   imageExists,
+  buildImage,
   startContainer,
   execInContainer,
   execInContainerStreaming,

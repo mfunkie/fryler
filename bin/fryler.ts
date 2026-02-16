@@ -2,7 +2,11 @@
 
 /**
  * Fryler CLI entrypoint.
- * Parses arguments and dispatches to the appropriate command handler.
+ *
+ * Routing:
+ *  - FRYLER_CONTAINER=1 → execute commands directly (inside the container)
+ *  - Otherwise → host mode: start/stop/status manage the container,
+ *    all other commands are proxied into it via `container exec`
  */
 
 import { parseArgs } from "util";
@@ -34,48 +38,137 @@ if (values.help || !command) {
   process.exit(values.help ? 0 : 1);
 }
 
-switch (command) {
-  case "start":
-    await cmdStart();
-    break;
-  case "stop":
-    await cmdStop();
-    break;
-  case "restart":
-    await cmdRestart();
-    break;
-  case "status":
-    await cmdStatus();
-    break;
-  case "ask":
-    await cmdAsk(positionals.slice(1));
-    break;
-  case "chat":
-    await cmdChat();
-    break;
-  case "logs":
-    await cmdLogs();
-    break;
-  case "sessions":
-    await cmdSessions();
-    break;
-  case "resume":
-    await cmdResume(positionals[1]);
-    break;
-  case "task":
-    await cmdTask(positionals.slice(1));
-    break;
-  case "heartbeat":
-    await cmdHeartbeat();
-    break;
-  case "login":
-    await cmdLogin();
-    break;
-  default:
-    console.error(`Unknown command: ${command}`);
-    showHelp();
-    process.exit(1);
+const isInsideContainer = process.env.FRYLER_CONTAINER === "1";
+
+if (!isInsideContainer) {
+  // ─── Host mode ─────────────────────────────────────────────
+  // start/stop/status are handled locally on the host.
+  // logs reads from the host volume directly (works even when stopped).
+  // Everything else is proxied into the container.
+  await hostDispatch(command);
+} else {
+  // ─── Container mode ────────────────────────────────────────
+  // All commands execute directly inside the container.
+  await containerDispatch(command);
 }
+
+// ─── Host-side dispatch ────────────────────────────────────────
+
+async function hostDispatch(cmd: string): Promise<void> {
+  const { getConfig } = await import("@/config/index.ts");
+  const config = await getConfig();
+
+  switch (cmd) {
+    case "start": {
+      const { hostStart } = await import("@/proxy/index.ts");
+      await hostStart(config);
+      break;
+    }
+    case "stop": {
+      const { hostStop } = await import("@/proxy/index.ts");
+      await hostStop(config);
+      break;
+    }
+    case "status": {
+      const { hostStatus } = await import("@/proxy/index.ts");
+      await hostStatus(config);
+      break;
+    }
+    case "restart": {
+      const { hostStop, hostStart } = await import("@/proxy/index.ts");
+      await hostStop(config);
+      await Bun.sleep(1000);
+      await hostStart(config);
+      break;
+    }
+    case "logs":
+      // Read from host volume directly — works even when container is stopped
+      await cmdLogs(config.data_dir);
+      break;
+    case "login": {
+      // Login can run without the daemon — spin up a temp container
+      const { ensureImage, ensureDataDir, bootstrapLogin } = await import("@/proxy/index.ts");
+      const { join } = await import("node:path");
+      const { homedir } = await import("node:os");
+      const { mkdirSync } = await import("node:fs");
+
+      await ensureImage(config.container_image);
+      ensureDataDir(config.data_dir);
+      const claudeDir = join(homedir(), ".claude");
+      mkdirSync(claudeDir, { recursive: true });
+      const volumes = [`${config.data_dir}:/root/.fryler`, `${claudeDir}:/root/.claude`];
+      await bootstrapLogin(config, volumes);
+      break;
+    }
+    default: {
+      // Proxy everything else into the container
+      const { proxyToContainer, isInteractiveCommand } = await import("@/proxy/index.ts");
+      const { isContainerRunning } = await import("@/container/manager.ts");
+
+      if (!(await isContainerRunning(config.container_name))) {
+        console.error("fryler container is not running. Run 'fryler start' first.");
+        process.exit(1);
+      }
+
+      const interactive = isInteractiveCommand(cmd);
+      const exitCode = await proxyToContainer(
+        config.container_name,
+        process.argv.slice(2),
+        interactive,
+      );
+      process.exit(exitCode);
+    }
+  }
+}
+
+// ─── Container-side dispatch ───────────────────────────────────
+
+async function containerDispatch(cmd: string): Promise<void> {
+  switch (cmd) {
+    case "start":
+      await cmdStart();
+      break;
+    case "stop":
+      await cmdStop();
+      break;
+    case "restart":
+      await cmdRestart();
+      break;
+    case "status":
+      await cmdStatus();
+      break;
+    case "ask":
+      await cmdAsk(positionals.slice(1));
+      break;
+    case "chat":
+      await cmdChat();
+      break;
+    case "logs":
+      await cmdLogs();
+      break;
+    case "sessions":
+      await cmdSessions();
+      break;
+    case "resume":
+      await cmdResume(positionals[1]);
+      break;
+    case "task":
+      await cmdTask(positionals.slice(1));
+      break;
+    case "heartbeat":
+      await cmdHeartbeat();
+      break;
+    case "login":
+      await cmdLogin();
+      break;
+    default:
+      console.error(`Unknown command: ${cmd}`);
+      showHelp();
+      process.exit(1);
+  }
+}
+
+// ─── Help ──────────────────────────────────────────────────────
 
 function showHelp(): void {
   console.log("fryler — autonomous AI daemon for macOS\n");
@@ -107,6 +200,8 @@ function showHelp(): void {
   console.log("  --max-turns <N>      Max Claude turns for ask");
   console.log("  -v, --verbose        Show log output in terminal");
 }
+
+// ─── Command handlers (container-side) ─────────────────────────
 
 async function cmdStart(): Promise<void> {
   const { startDaemon } = await import("@/daemon/index.ts");
@@ -238,12 +333,15 @@ async function cmdChat(): Promise<void> {
   await startRepl(opts);
 }
 
-async function cmdLogs(): Promise<void> {
+async function cmdLogs(dataDir?: string): Promise<void> {
   const { homedir } = await import("node:os");
   const { join } = await import("node:path");
   const { existsSync } = await import("node:fs");
 
-  const logFile = join(homedir(), ".fryler", "logs", "fryler.log");
+  // On the host, read from the data volume directory.
+  // Inside the container (or dev), read from ~/.fryler/logs/.
+  const logDir = dataDir ? join(dataDir, "logs") : join(homedir(), ".fryler", "logs");
+  const logFile = join(logDir, "fryler.log");
 
   if (!existsSync(logFile)) {
     console.log("No log file found. Has the daemon been started?");

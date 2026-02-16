@@ -2,14 +2,15 @@
  * Configuration loading from ~/.fryler/config.toml.
  */
 
-import { homedir } from "os";
-import { join } from "path";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 export interface FrylerConfig {
   heartbeat_interval_seconds: number;
   log_level: "debug" | "info" | "warn" | "error";
   container_image: string;
   container_name: string;
+  data_dir: string;
   claude_model: string;
   claude_max_turns: number;
 }
@@ -20,6 +21,7 @@ export function getDefaultConfig(): FrylerConfig {
     log_level: "info",
     container_image: "fry-claude:latest",
     container_name: "fryler-runtime",
+    data_dir: join(homedir(), ".fryler", "data"),
     claude_model: "sonnet",
     claude_max_turns: 25,
   };

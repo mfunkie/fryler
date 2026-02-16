@@ -11,6 +11,7 @@ describe("getDefaultConfig", () => {
     expect(config.log_level).toBe("info");
     expect(config.container_image).toBe("fry-claude:latest");
     expect(config.container_name).toBe("fryler-runtime");
+    expect(config.data_dir).toContain(".fryler/data");
     expect(config.claude_model).toBe("sonnet");
     expect(config.claude_max_turns).toBe(25);
   });
