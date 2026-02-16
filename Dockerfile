@@ -1,7 +1,9 @@
 FROM fry-claude:latest
 
-# Install Bun
-RUN curl -fsSL https://bun.sh/install | bash
+# Install Bun (unzip required by installer)
+RUN apt-get update && apt-get install -y --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
 # Copy project source
