@@ -1,12 +1,7 @@
 import { describe, test, expect, afterEach } from "bun:test";
 import { join } from "path";
 import { unlinkSync, existsSync } from "fs";
-import {
-  getProjectRoot,
-  readSoul,
-  readMemory,
-  getIdentityContext,
-} from "../src/memory/index";
+import { getProjectRoot, readSoul, readMemory, getIdentityContext } from "../src/memory/index";
 
 describe("memory", () => {
   test("getProjectRoot points to repo root", () => {

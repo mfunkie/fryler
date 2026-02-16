@@ -157,11 +157,17 @@ async function cmdAsk(args: string[]): Promise<void> {
 
   getDb();
 
-  const opts: { sessionId?: string; model?: string; maxTurns?: number } = {};
+  const opts: {
+    sessionId?: string;
+    continueSession?: boolean;
+    model?: string;
+    maxTurns?: number;
+  } = {};
   if (values.model) opts.model = values.model as string;
   if (values["max-turns"]) opts.maxTurns = Number(values["max-turns"]);
 
   // Session resolution: explicit > auto-resume > new
+  let isResuming = false;
   if (values.session) {
     opts.sessionId = values.session as string;
   } else if (!values.new) {
@@ -169,7 +175,8 @@ async function cmdAsk(args: string[]): Promise<void> {
     const sessions = listSessions();
     const cliSession = sessions.find((s) => s.title?.startsWith("[cli] "));
     if (cliSession) {
-      opts.sessionId = cliSession.claude_session_id;
+      opts.continueSession = true;
+      isResuming = true;
     }
   }
 
@@ -180,7 +187,7 @@ async function cmdAsk(args: string[]): Promise<void> {
 
   // Track session automatically
   if (response.session_id) {
-    if (opts.sessionId) {
+    if (isResuming || opts.sessionId) {
       updateSession(response.session_id);
     } else {
       createSession(response.session_id, `[cli] ${prompt.slice(0, 80)}`);

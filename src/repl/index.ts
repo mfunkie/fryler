@@ -21,6 +21,7 @@ async function startRepl(options?: ReplOptions): Promise<void> {
   const rl = createInterface({ input: stdin, output: stdout });
 
   let sessionId: string | null = options?.sessionId ?? null;
+  let hasExchanged = false; // true after first successful message in this session
   let messageCount = 0;
 
   console.log("fryler interactive mode. Type /help for commands, /quit to exit.");
@@ -46,6 +47,7 @@ async function startRepl(options?: ReplOptions): Promise<void> {
         input,
         () => {
           sessionId = null;
+          hasExchanged = false;
           messageCount = 0;
         },
         sessionId,
@@ -60,7 +62,11 @@ async function startRepl(options?: ReplOptions): Promise<void> {
     // Send to Claude with streaming
     try {
       const askOpts: AskOptions = {};
-      if (sessionId) {
+      if (hasExchanged) {
+        // After the first exchange, use --continue to avoid session lock conflicts
+        askOpts.continueSession = true;
+      } else if (sessionId) {
+        // Resuming a specific session for the first time this REPL run
         askOpts.sessionId = sessionId;
       }
 
@@ -110,6 +116,7 @@ async function startRepl(options?: ReplOptions): Promise<void> {
           sessionId = resultSessionId;
           createSession(sessionId, `[chat] ${input.slice(0, 80)}`);
         }
+        hasExchanged = true;
         messageCount++;
         updateSession(sessionId, messageCount);
       }

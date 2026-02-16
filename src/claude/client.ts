@@ -18,6 +18,7 @@ export interface ClaudeResponse {
 
 export interface AskOptions {
   sessionId?: string;
+  continueSession?: boolean;
   maxTurns?: number;
   model?: string;
   systemPrompt?: string;
@@ -63,7 +64,9 @@ async function buildArgs(
     args.push("--system-prompt", await getIdentityContext());
   }
 
-  if (options?.sessionId) {
+  if (options?.continueSession) {
+    args.push("--continue");
+  } else if (options?.sessionId) {
     args.push("--session-id", options.sessionId);
   }
 
