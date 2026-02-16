@@ -26,7 +26,7 @@ export interface ParseResult {
  * Find all markers of a given type in the text.
  * Matches: <!-- FRYLER_TYPE: {json} -->
  */
-function extractMarkers(text: string, markerType: string): { json: string; fullMatch: string }[] {
+export function extractMarkers(text: string, markerType: string): { json: string; fullMatch: string }[] {
   const pattern = new RegExp(`<!--\\s*FRYLER_${markerType}:\\s*(\\{.*?\\})\\s*-->`, "gs");
   const results: { json: string; fullMatch: string }[] = [];
   let match: RegExpExecArray | null;
@@ -103,7 +103,7 @@ function validateMemory(raw: unknown): ParsedMemory | null {
  * Parse a raw Claude response, extracting task and memory markers.
  * Returns clean text (all markers stripped) plus parsed tasks and memories.
  */
-function parseClaudeResponse(rawText: string): ParseResult {
+export function parseClaudeResponse(rawText: string): ParseResult {
   const tasks: ParsedTask[] = [];
   const memories: ParsedMemory[] = [];
   let cleanText = rawText;
@@ -146,4 +146,3 @@ function parseClaudeResponse(rawText: string): ParseResult {
   return { cleanText, tasks, memories };
 }
 
-export { parseClaudeResponse, extractMarkers };

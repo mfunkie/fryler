@@ -13,12 +13,12 @@ import { createMemory } from "@/db/memories.ts";
 import { appendMemory } from "@/memory/index.ts";
 import { logger } from "@/logger/index.ts";
 
-interface ReplOptions {
+export interface ReplOptions {
   sessionId?: string;
   autoResume?: boolean;
 }
 
-async function startRepl(options?: ReplOptions): Promise<void> {
+export async function startRepl(options?: ReplOptions): Promise<void> {
   const rl = createInterface({ input: stdin, output: stdout });
 
   let sessionId: string | null = options?.sessionId ?? null;
@@ -202,5 +202,3 @@ async function processMarkers(text: string): Promise<void> {
   }
 }
 
-export { startRepl };
-export type { ReplOptions };

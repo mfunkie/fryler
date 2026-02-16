@@ -11,7 +11,7 @@
 import { logger } from "../logger/index.ts";
 import { acquirePid, removePid, isRunning, readPid } from "./pid.ts";
 import { registerSignalHandlers } from "./signals.ts";
-import { startHeartbeat, stopHeartbeat, triggerHeartbeat } from "./heartbeat.ts";
+import { startHeartbeat, stopHeartbeat } from "./heartbeat.ts";
 import { getContainerStatus } from "../container/manager.ts";
 import { getDb, closeDb } from "../db/index.ts";
 import { getConfig } from "../config/index.ts";
@@ -22,7 +22,7 @@ let daemonRunning = false;
 /**
  * Start the fryler daemon.
  */
-async function startDaemon(): Promise<void> {
+export async function startDaemon(): Promise<void> {
   // Check for existing instance
   if (!acquirePid()) {
     const existingPid = readPid();
@@ -83,7 +83,7 @@ async function startDaemon(): Promise<void> {
 /**
  * Stop the fryler daemon (called from CLI).
  */
-async function stopDaemon(): Promise<void> {
+export async function stopDaemon(): Promise<void> {
   const pid = readPid();
   if (pid === null) {
     console.log("fryler daemon is not running.");
@@ -135,7 +135,7 @@ async function shutdownDaemon(): Promise<void> {
 /**
  * Get daemon status info.
  */
-async function getDaemonStatus(): Promise<{
+export async function getDaemonStatus(): Promise<{
   daemonRunning: boolean;
   pid: number | null;
   container: { running: boolean; name: string; uptime?: string };
@@ -152,4 +152,3 @@ async function getDaemonStatus(): Promise<{
   };
 }
 
-export { startDaemon, stopDaemon, getDaemonStatus, triggerHeartbeat };

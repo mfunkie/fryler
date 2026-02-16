@@ -35,7 +35,7 @@ export interface ContainerStatus {
 /**
  * Check whether the `container` CLI is available on this system.
  */
-async function isContainerAvailable(): Promise<boolean> {
+export async function isContainerAvailable(): Promise<boolean> {
   try {
     const proc = Bun.spawn(["container", "--version"], {
       stdout: "pipe",
@@ -51,7 +51,7 @@ async function isContainerAvailable(): Promise<boolean> {
 /**
  * Check if a container image exists locally.
  */
-async function imageExists(image: string): Promise<boolean> {
+export async function imageExists(image: string): Promise<boolean> {
   try {
     const proc = Bun.spawn(["container", "image", "list"], {
       stdout: "pipe",
@@ -114,7 +114,7 @@ function buildRunArgs(config: ContainerConfig): string[] {
  * If config.command is provided, it is used as the entrypoint args.
  * Otherwise falls back to `sleep infinity` to keep it alive for exec commands.
  */
-async function startContainer(config: ContainerConfig): Promise<void> {
+export async function startContainer(config: ContainerConfig): Promise<void> {
   if (!(await isContainerAvailable())) {
     throw new Error(
       "Apple container CLI not found. Install from https://github.com/apple/container/releases",
@@ -154,7 +154,7 @@ async function startContainer(config: ContainerConfig): Promise<void> {
 /**
  * Execute a command inside a running container.
  */
-async function execInContainer(name: string, command: string[]): Promise<ExecResult> {
+export async function execInContainer(name: string, command: string[]): Promise<ExecResult> {
   const proc = Bun.spawn(["container", "exec", name, ...command], {
     stdout: "pipe",
     stderr: "pipe",
@@ -171,7 +171,7 @@ async function execInContainer(name: string, command: string[]): Promise<ExecRes
  * Execute a command in the container with streaming stdout.
  * Returns the process for the caller to consume the stream.
  */
-function execInContainerStreaming(name: string, command: string[]): ReturnType<typeof Bun.spawn> {
+export function execInContainerStreaming(name: string, command: string[]): ReturnType<typeof Bun.spawn> {
   return Bun.spawn(["container", "exec", name, ...command], {
     stdout: "pipe",
     stderr: "pipe",
@@ -181,7 +181,7 @@ function execInContainerStreaming(name: string, command: string[]): ReturnType<t
 /**
  * Stop a running container.
  */
-async function stopContainer(name: string): Promise<void> {
+export async function stopContainer(name: string): Promise<void> {
   logger.info("Stopping container", { name });
 
   const proc = Bun.spawn(["container", "stop", name], {
@@ -202,7 +202,7 @@ async function stopContainer(name: string): Promise<void> {
 /**
  * Remove a stopped container.
  */
-async function removeContainer(name: string): Promise<void> {
+export async function removeContainer(name: string): Promise<void> {
   const proc = Bun.spawn(["container", "rm", name], {
     stdout: "pipe",
     stderr: "pipe",
@@ -213,7 +213,7 @@ async function removeContainer(name: string): Promise<void> {
 /**
  * Check whether a specific container is currently running.
  */
-async function isContainerRunning(name: string): Promise<boolean> {
+export async function isContainerRunning(name: string): Promise<boolean> {
   try {
     const proc = Bun.spawn(["container", "ls", "--quiet"], {
       stdout: "pipe",
@@ -236,7 +236,7 @@ async function isContainerRunning(name: string): Promise<boolean> {
 /**
  * Get the status of the fryler container.
  */
-async function getContainerStatus(name: string): Promise<ContainerStatus> {
+export async function getContainerStatus(name: string): Promise<ContainerStatus> {
   const running = await isContainerRunning(name);
 
   if (!running) {
@@ -269,7 +269,7 @@ async function getContainerStatus(name: string): Promise<ContainerStatus> {
 /**
  * Build a container image from a Dockerfile.
  */
-async function buildImage(tag: string, contextDir: string, dockerfile?: string): Promise<void> {
+export async function buildImage(tag: string, contextDir: string, dockerfile?: string): Promise<void> {
   const args = ["container", "build", "--tag", tag];
   if (dockerfile) {
     args.push("--file", dockerfile);
@@ -296,7 +296,7 @@ async function buildImage(tag: string, contextDir: string, dockerfile?: string):
 /**
  * Stop and remove the container. Graceful shutdown.
  */
-async function destroyContainer(name: string): Promise<void> {
+export async function destroyContainer(name: string): Promise<void> {
   await stopContainer(name);
   await removeContainer(name);
 }
@@ -316,7 +316,7 @@ function formatUptime(ms: number): string {
 /**
  * Remove a container image by tag.
  */
-async function removeImage(tag: string): Promise<void> {
+export async function removeImage(tag: string): Promise<void> {
   const proc = Bun.spawn(["container", "image", "rm", tag], {
     stdout: "pipe",
     stderr: "pipe",
@@ -332,17 +332,3 @@ async function removeImage(tag: string): Promise<void> {
   logger.info("Image removed", { tag });
 }
 
-export {
-  isContainerAvailable,
-  imageExists,
-  buildImage,
-  removeImage,
-  startContainer,
-  execInContainer,
-  execInContainerStreaming,
-  stopContainer,
-  removeContainer,
-  isContainerRunning,
-  getContainerStatus,
-  destroyContainer,
-};

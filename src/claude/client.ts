@@ -35,7 +35,7 @@ export interface StreamEvent {
  * Returns a clean env object with CLAUDECODE and CLAUDE_CODE_ENTRY_POINT
  * removed so that the spawned claude process does not detect nesting.
  */
-function buildClaudeEnv(): Record<string, string | undefined> {
+export function buildClaudeEnv(): Record<string, string | undefined> {
   return {
     ...process.env,
     CLAUDECODE: undefined,
@@ -46,7 +46,7 @@ function buildClaudeEnv(): Record<string, string | undefined> {
 /**
  * Build the args array for a claude CLI invocation.
  */
-async function buildArgs(
+export async function buildArgs(
   prompt: string,
   outputFormat: "json" | "stream-json",
   options?: AskOptions,
@@ -89,7 +89,7 @@ async function buildArgs(
  * Parse the JSON output from claude CLI into a ClaudeResponse.
  * The output may be a single object or an array — find the object with type === "result".
  */
-function parseClaudeOutput(raw: string): ClaudeResponse {
+export function parseClaudeOutput(raw: string): ClaudeResponse {
   const parsed: unknown = JSON.parse(raw);
 
   let resultObj: Record<string, unknown>;
@@ -123,7 +123,7 @@ function parseClaudeOutput(raw: string): ClaudeResponse {
 /**
  * One-shot query to the claude CLI. Returns parsed ClaudeResponse.
  */
-async function ask(prompt: string, options?: AskOptions): Promise<ClaudeResponse> {
+export async function ask(prompt: string, options?: AskOptions): Promise<ClaudeResponse> {
   const args = await buildArgs(prompt, "json", options);
 
   logger.info("claude ask", { prompt: prompt.slice(0, 100), args_count: args.length });
@@ -160,7 +160,7 @@ async function ask(prompt: string, options?: AskOptions): Promise<ClaudeResponse
  * Streaming query to the claude CLI. Yields StreamEvent objects
  * parsed from NDJSON (one JSON object per line).
  */
-async function* askStreaming(prompt: string, options?: AskOptions): AsyncGenerator<StreamEvent> {
+export async function* askStreaming(prompt: string, options?: AskOptions): AsyncGenerator<StreamEvent> {
   const args = await buildArgs(prompt, "stream-json", options);
 
   logger.info("claude askStreaming", { prompt: prompt.slice(0, 100) });
@@ -225,7 +225,7 @@ async function* askStreaming(prompt: string, options?: AskOptions): AsyncGenerat
  * Special wrapper for heartbeat task execution. Builds a system prompt
  * with identity context + task instructions, and uses --no-session-persistence.
  */
-async function askForTask(taskDescription: string, context?: string): Promise<ClaudeResponse> {
+export async function askForTask(taskDescription: string, context?: string): Promise<ClaudeResponse> {
   const identityContext = await getIdentityContext();
   const contextBlock = context ? `\n\n=== ADDITIONAL CONTEXT ===\n${context}` : "";
   const systemPrompt =
@@ -244,4 +244,3 @@ async function askForTask(taskDescription: string, context?: string): Promise<Cl
   });
 }
 
-export { buildClaudeEnv, buildArgs, parseClaudeOutput, ask, askStreaming, askForTask };

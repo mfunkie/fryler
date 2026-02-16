@@ -11,7 +11,7 @@ import { logger } from "@/logger/index.ts";
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
-function startHeartbeat(intervalMs: number): void {
+export function startHeartbeat(intervalMs: number): void {
   if (intervalId !== null) {
     logger.warn("Heartbeat already running, ignoring startHeartbeat call");
     return;
@@ -27,7 +27,7 @@ function startHeartbeat(intervalMs: number): void {
   }, intervalMs);
 }
 
-function stopHeartbeat(): void {
+export function stopHeartbeat(): void {
   logger.info("Stopping heartbeat");
   if (intervalId !== null) {
     clearInterval(intervalId);
@@ -35,7 +35,7 @@ function stopHeartbeat(): void {
   }
 }
 
-async function heartbeatTick(): Promise<void> {
+export async function heartbeatTick(): Promise<void> {
   logger.info("Heartbeat tick starting");
 
   const dueTasks = getDueTasks();
@@ -91,12 +91,11 @@ async function heartbeatTick(): Promise<void> {
   logger.info("Heartbeat tick complete");
 }
 
-async function triggerHeartbeat(): Promise<void> {
+export async function triggerHeartbeat(): Promise<void> {
   await heartbeatTick();
 }
 
-function isHeartbeatRunning(): boolean {
+export function isHeartbeatRunning(): boolean {
   return intervalId !== null;
 }
 
-export { startHeartbeat, stopHeartbeat, heartbeatTick, triggerHeartbeat, isHeartbeatRunning };

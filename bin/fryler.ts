@@ -509,7 +509,7 @@ async function cmdTask(args: string[]): Promise<void> {
 
 async function cmdHeartbeat(): Promise<void> {
   const { getDb } = await import("@/db/index.ts");
-  const { triggerHeartbeat } = await import("@/daemon/index.ts");
+  const { triggerHeartbeat } = await import("@/daemon/heartbeat.ts");
 
   getDb();
 

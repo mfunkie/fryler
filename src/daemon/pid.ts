@@ -2,7 +2,7 @@ import { mkdirSync, existsSync, unlinkSync, writeFileSync, readFileSync } from "
 import { join } from "path";
 import { homedir } from "os";
 
-function getFrylerDir(): string {
+export function getFrylerDir(): string {
   const dir = join(homedir(), ".fryler");
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
@@ -10,15 +10,15 @@ function getFrylerDir(): string {
   return dir;
 }
 
-function getPidPath(): string {
+export function getPidPath(): string {
   return join(getFrylerDir(), "fryler.pid");
 }
 
-function writePid(): void {
+export function writePid(): void {
   writeFileSync(getPidPath(), String(process.pid), "utf-8");
 }
 
-function readPid(): number | null {
+export function readPid(): number | null {
   const pidPath = getPidPath();
   if (!existsSync(pidPath)) {
     return null;
@@ -31,7 +31,7 @@ function readPid(): number | null {
   return pid;
 }
 
-function isRunning(pid?: number): boolean {
+export function isRunning(pid?: number): boolean {
   const targetPid = pid ?? readPid();
   if (targetPid === null || targetPid === undefined) {
     return false;
@@ -44,14 +44,14 @@ function isRunning(pid?: number): boolean {
   }
 }
 
-function removePid(): void {
+export function removePid(): void {
   const pidPath = getPidPath();
   if (existsSync(pidPath)) {
     unlinkSync(pidPath);
   }
 }
 
-function acquirePid(): boolean {
+export function acquirePid(): boolean {
   const existingPid = readPid();
   if (existingPid !== null) {
     if (isRunning(existingPid)) {
@@ -63,4 +63,3 @@ function acquirePid(): boolean {
   return true;
 }
 
-export { getFrylerDir, getPidPath, writePid, readPid, isRunning, removePid, acquirePid };

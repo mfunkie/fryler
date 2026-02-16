@@ -13,7 +13,7 @@ function isInsideContainer(): boolean {
   return process.env.FRYLER_CONTAINER === "1";
 }
 
-function getProjectRoot(): string {
+export function getProjectRoot(): string {
   return join(import.meta.dir, "..", "..");
 }
 
@@ -22,7 +22,7 @@ function getProjectRoot(): string {
  * In-container: ~/.fryler/ (persisted volume).
  * On host: project root (dev workflow).
  */
-function getIdentityDir(): string {
+export function getIdentityDir(): string {
   if (isInsideContainer()) {
     return join(homedir(), ".fryler");
   }
@@ -34,7 +34,7 @@ function getIdentityDir(): string {
  * Copies baked-in defaults from /opt/fryler/ if not already present.
  * No-op on the host.
  */
-function initIdentityFiles(): void {
+export function initIdentityFiles(): void {
   if (!isInsideContainer()) return;
 
   const targetDir = join(homedir(), ".fryler");
@@ -52,19 +52,19 @@ function initIdentityFiles(): void {
   }
 }
 
-async function readSoul(): Promise<string> {
+export async function readSoul(): Promise<string> {
   const file = Bun.file(join(getIdentityDir(), "SOUL.md"));
   if (!(await file.exists())) return "";
   return file.text();
 }
 
-async function readMemory(): Promise<string> {
+export async function readMemory(): Promise<string> {
   const file = Bun.file(join(getIdentityDir(), "MEMORY.md"));
   if (!(await file.exists())) return "";
   return file.text();
 }
 
-async function appendMemory(entry: string): Promise<void> {
+export async function appendMemory(entry: string): Promise<void> {
   const path = join(getIdentityDir(), "MEMORY.md");
   const file = Bun.file(path);
   const existing = (await file.exists()) ? await file.text() : "";
@@ -73,18 +73,9 @@ async function appendMemory(entry: string): Promise<void> {
   await Bun.write(path, appended);
 }
 
-async function getIdentityContext(): Promise<string> {
+export async function getIdentityContext(): Promise<string> {
   const soul = await readSoul();
   const memory = await readMemory();
   return `=== FRYLER IDENTITY (SOUL.md) ===\n${soul}\n\n=== FRYLER MEMORY (MEMORY.md) ===\n${memory}`;
 }
 
-export {
-  getProjectRoot,
-  getIdentityDir,
-  initIdentityFiles,
-  readSoul,
-  readMemory,
-  appendMemory,
-  getIdentityContext,
-};

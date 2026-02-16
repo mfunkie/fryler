@@ -1,4 +1,4 @@
-function registerSignalHandlers(cleanup: () => Promise<void>): void {
+export function registerSignalHandlers(cleanup: () => Promise<void>): void {
   let shuttingDown = false;
 
   function handler(_signal: string) {
@@ -13,4 +13,3 @@ function registerSignalHandlers(cleanup: () => Promise<void>): void {
   process.on("SIGINT", () => handler("SIGINT"));
 }
 
-export { registerSignalHandlers };

@@ -28,7 +28,7 @@ const INTERACTIVE_COMMANDS = new Set(["chat", "resume", "login"]);
  * Proxy a CLI invocation into the running container.
  * Interactive commands get full TTY passthrough.
  */
-async function proxyToContainer(
+export async function proxyToContainer(
   containerName: string,
   args: string[],
   interactive: boolean,
@@ -53,7 +53,7 @@ async function proxyToContainer(
 /**
  * Ensure the fryler container image is built. Builds if missing.
  */
-async function ensureImage(imageName: string): Promise<void> {
+export async function ensureImage(imageName: string): Promise<void> {
   if (await imageExists(imageName)) {
     return;
   }
@@ -67,7 +67,7 @@ async function ensureImage(imageName: string): Promise<void> {
 /**
  * Ensure the data directory exists on the host for volume mounting.
  */
-function ensureDataDir(dataDir: string): void {
+export function ensureDataDir(dataDir: string): void {
   mkdirSync(dataDir, { recursive: true });
 }
 
@@ -75,7 +75,7 @@ function ensureDataDir(dataDir: string): void {
  * Check if Claude CLI credentials exist on the host.
  * Looks for ~/.claude/ directory with credential files.
  */
-function isClaudeAuthenticated(): boolean {
+export function isClaudeAuthenticated(): boolean {
   const claudeDir = join(homedir(), ".claude");
   // Claude stores credentials in ~/.claude/. If the directory doesn't exist
   // or is empty, the user hasn't authenticated yet.
@@ -91,7 +91,7 @@ function isClaudeAuthenticated(): boolean {
  * Bootstrap Claude authentication inside a temporary container.
  * Starts the container, runs `fryler login` interactively, then stops it.
  */
-async function bootstrapLogin(config: FrylerConfig, volumes: string[]): Promise<void> {
+export async function bootstrapLogin(config: FrylerConfig, volumes: string[]): Promise<void> {
   console.log("\nClaude CLI is not authenticated. Starting first-time setup...\n");
 
   // Start a temporary container for login
@@ -133,7 +133,7 @@ async function bootstrapLogin(config: FrylerConfig, volumes: string[]): Promise<
  * Handle `fryler start` on the host — build image, start container with volumes.
  * On first run, bootstraps Claude CLI authentication.
  */
-async function hostStart(config: FrylerConfig): Promise<void> {
+export async function hostStart(config: FrylerConfig): Promise<void> {
   if (!(await isContainerAvailable())) {
     console.error(
       "Apple container CLI not found. Install from https://github.com/apple/container/releases",
@@ -172,7 +172,7 @@ async function hostStart(config: FrylerConfig): Promise<void> {
 /**
  * Handle `fryler stop` on the host — stop and remove the container.
  */
-async function hostStop(config: FrylerConfig): Promise<void> {
+export async function hostStop(config: FrylerConfig): Promise<void> {
   if (!(await isContainerRunning(config.container_name))) {
     console.log("fryler container is not running.");
     return;
@@ -186,7 +186,7 @@ async function hostStop(config: FrylerConfig): Promise<void> {
 /**
  * Handle `fryler status` on the host — show container + daemon info.
  */
-async function hostStatus(config: FrylerConfig): Promise<void> {
+export async function hostStatus(config: FrylerConfig): Promise<void> {
   const container = await getContainerStatus(config.container_name);
 
   console.log("Container:");
@@ -209,18 +209,7 @@ async function hostStatus(config: FrylerConfig): Promise<void> {
 /**
  * Determine if a command is interactive (needs TTY).
  */
-function isInteractiveCommand(command: string): boolean {
+export function isInteractiveCommand(command: string): boolean {
   return INTERACTIVE_COMMANDS.has(command);
 }
 
-export {
-  proxyToContainer,
-  ensureImage,
-  ensureDataDir,
-  isClaudeAuthenticated,
-  bootstrapLogin,
-  hostStart,
-  hostStop,
-  hostStatus,
-  isInteractiveCommand,
-};
