@@ -1,7 +1,7 @@
 function registerSignalHandlers(cleanup: () => Promise<void>): void {
   let shuttingDown = false;
 
-  function handler(signal: string) {
+  function handler(_signal: string) {
     if (shuttingDown) return;
     shuttingDown = true;
     cleanup().finally(() => {
