@@ -21,6 +21,7 @@ const { values, positionals } = parseArgs({
     scheduled: { type: "string" },
     model: { type: "string", short: "m" },
     "max-turns": { type: "string" },
+    verbose: { type: "boolean", short: "v", default: false },
   },
   allowPositionals: true,
   strict: false,
@@ -104,6 +105,7 @@ function showHelp(): void {
   console.log("  -p, --priority <N>   Task priority (1-5, default: 3)");
   console.log("  --scheduled <time>   Schedule task for later (ISO 8601)");
   console.log("  --max-turns <N>      Max Claude turns for ask");
+  console.log("  -v, --verbose        Show log output in terminal");
 }
 
 async function cmdStart(): Promise<void> {
@@ -145,6 +147,11 @@ async function cmdAsk(args: string[]): Promise<void> {
   if (!prompt) {
     console.error("Usage: fryler ask <prompt>");
     process.exit(1);
+  }
+
+  if (!values.verbose) {
+    const { logger } = await import("@/logger/index.ts");
+    logger.setQuiet(true);
   }
 
   const { getDb } = await import("@/db/index.ts");
@@ -205,6 +212,11 @@ async function cmdAsk(args: string[]): Promise<void> {
 }
 
 async function cmdChat(): Promise<void> {
+  if (!values.verbose) {
+    const { logger } = await import("@/logger/index.ts");
+    logger.setQuiet(true);
+  }
+
   const { getDb } = await import("@/db/index.ts");
   const { startRepl } = await import("@/repl/index.ts");
   const { listSessions } = await import("@/db/sessions.ts");
@@ -282,6 +294,11 @@ async function cmdResume(sessionId?: string): Promise<void> {
   if (!sessionId) {
     console.error("Usage: fryler resume <session-id>");
     process.exit(1);
+  }
+
+  if (!values.verbose) {
+    const { logger } = await import("@/logger/index.ts");
+    logger.setQuiet(true);
   }
 
   const { getDb } = await import("@/db/index.ts");

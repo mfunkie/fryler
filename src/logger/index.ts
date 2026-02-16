@@ -18,6 +18,7 @@ const LEVEL_PRIORITY: Record<LogLevel, number> = {
 let logDir = join(homedir(), ".fryler", "logs");
 let logFile = join(logDir, "fryler.log");
 let minLevel: LogLevel = "info";
+let quiet = false;
 let lastWriteDate: string | null = null;
 let dirEnsured = false;
 
@@ -27,6 +28,10 @@ function setLevel(level: LogLevel): void {
 
 function getLevel(): LogLevel {
   return minLevel;
+}
+
+function setQuiet(value: boolean): void {
+  quiet = value;
 }
 
 function ensureLogDir(): void {
@@ -72,17 +77,19 @@ function writeLog(level: LogLevel, message: string, data?: Record<string, unknow
   rotateIfNeeded();
   appendFileSync(logFile, line + "\n");
 
-  switch (level) {
-    case "debug":
-    case "info":
-      console.log(line);
-      break;
-    case "warn":
-      console.warn(line);
-      break;
-    case "error":
-      console.error(line);
-      break;
+  if (!quiet) {
+    switch (level) {
+      case "debug":
+      case "info":
+        console.log(line);
+        break;
+      case "warn":
+        console.warn(line);
+        break;
+      case "error":
+        console.error(line);
+        break;
+    }
   }
 }
 
@@ -114,6 +121,7 @@ function _reset(overrideDir?: string): void {
     logFile = join(logDir, "fryler.log");
   }
   minLevel = "info";
+  quiet = false;
   lastWriteDate = null;
   dirEnsured = false;
 }
@@ -132,6 +140,7 @@ export const logger = {
   error,
   setLevel,
   getLevel,
+  setQuiet,
   _reset,
   _setLastWriteDate,
 };
