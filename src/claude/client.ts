@@ -54,6 +54,11 @@ async function buildArgs(
   const config = await getConfig();
   const args: string[] = ["-p", prompt, "--output-format", outputFormat];
 
+  // Claude CLI requires --verbose when using --print with stream-json
+  if (outputFormat === "stream-json") {
+    args.push("--verbose");
+  }
+
   const injectIdentity = options?.injectIdentity ?? true;
   if (options?.systemPrompt) {
     const systemPrompt = injectIdentity

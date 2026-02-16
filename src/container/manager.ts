@@ -313,10 +313,30 @@ function formatUptime(ms: number): string {
   return `${seconds}s`;
 }
 
+/**
+ * Remove a container image by tag.
+ */
+async function removeImage(tag: string): Promise<void> {
+  const proc = Bun.spawn(["container", "image", "rm", tag], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+
+  const stderr = await new Response(proc.stderr).text();
+  const exitCode = await proc.exited;
+
+  if (exitCode !== 0) {
+    throw new Error(`Failed to remove image ${tag}: ${stderr}`);
+  }
+
+  logger.info("Image removed", { tag });
+}
+
 export {
   isContainerAvailable,
   imageExists,
   buildImage,
+  removeImage,
   startContainer,
   execInContainer,
   execInContainerStreaming,

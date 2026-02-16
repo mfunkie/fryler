@@ -54,7 +54,7 @@ Dockerfile                 Container image: fry-claude + Bun + fryler source
 
 The daemon runs inside an Apple container. The host CLI (`bin/fryler.ts`) checks `FRYLER_CONTAINER` env var:
 
-- **Host mode** (default): `start`/`stop`/`status`/`restart`/`logs`/`login` are handled locally. All other commands proxy into the container via `container exec`.
+- **Host mode** (default): `start`/`stop`/`status`/`restart`/`rebuild`/`logs`/`login` are handled locally. All other commands proxy into the container via `container exec`.
 - **Container mode** (`FRYLER_CONTAINER=1`): All commands execute directly.
 
 Volume mounts persist data across container restarts:

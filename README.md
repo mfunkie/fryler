@@ -5,9 +5,8 @@ Autonomous AI daemon for macOS. Runs inside an Apple container, executes queued 
 ## Prerequisites
 
 - [Bun](https://bun.sh) v1.2+
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (`claude`) installed
 - macOS with Apple container support (`/usr/local/bin/container`)
-- Base image: `fry-claude:latest` (Ubuntu + Claude CLI)
+- Base image: `fry-claude:latest` (Ubuntu + Claude CLI — provides `claude` inside the container)
 
 ## Install
 
@@ -43,6 +42,7 @@ fryler stop
 | `fryler start`               | Build image (if needed), start container  |
 | `fryler stop`                | Stop and remove the container             |
 | `fryler restart`             | Stop + start                              |
+| `fryler rebuild`             | Rebuild container image from source       |
 | `fryler status`              | Show container and daemon status          |
 | `fryler ask <prompt>`        | One-shot query to Claude                  |
 | `fryler chat`                | Interactive REPL with streaming           |

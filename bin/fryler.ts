@@ -81,6 +81,10 @@ async function hostDispatch(cmd: string): Promise<void> {
       await hostStart(config);
       break;
     }
+    case "rebuild": {
+      await hostRebuild(config);
+      break;
+    }
     case "logs":
       // Read from host volume directly — works even when container is stopped
       await cmdLogs(config.data_dir);
@@ -177,6 +181,7 @@ function showHelp(): void {
   console.log("  start                Start the fryler daemon");
   console.log("  stop                 Stop the fryler daemon");
   console.log("  restart              Restart the fryler daemon");
+  console.log("  rebuild              Rebuild the container image from source");
   console.log("  status               Show daemon and container status");
   console.log("  ask <prompt>         One-shot query to Claude");
   console.log("  chat                 Interactive REPL session");
@@ -199,6 +204,40 @@ function showHelp(): void {
   console.log("  --scheduled <time>   Schedule task for later (ISO 8601)");
   console.log("  --max-turns <N>      Max Claude turns for ask");
   console.log("  -v, --verbose        Show log output in terminal");
+}
+
+// ─── Host-side helpers ──────────────────────────────────────────
+
+async function hostRebuild(config: { container_image: string; container_name: string }): Promise<void> {
+  const { join } = await import("node:path");
+  const {
+    isContainerRunning,
+    destroyContainer,
+    imageExists,
+    removeImage,
+    buildImage,
+  } = await import("@/container/manager.ts");
+  const { getProjectRoot } = await import("@/memory/index.ts");
+
+  // Stop container if running
+  if (await isContainerRunning(config.container_name)) {
+    console.log("Stopping fryler container...");
+    await destroyContainer(config.container_name);
+    console.log("Stopped.");
+  }
+
+  // Remove old image if it exists
+  if (await imageExists(config.container_image)) {
+    console.log(`Removing image ${config.container_image}...`);
+    await removeImage(config.container_image);
+    console.log("Removed.");
+  }
+
+  // Rebuild
+  const projectRoot = getProjectRoot();
+  console.log(`Building ${config.container_image}...`);
+  await buildImage(config.container_image, projectRoot, join(projectRoot, "Dockerfile"));
+  console.log("Done. Run 'fryler start' to launch.");
 }
 
 // ─── Command handlers (container-side) ─────────────────────────
