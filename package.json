@@ -1,0 +1,22 @@
+{
+  "name": "fryler",
+  "module": "bin/fryler.ts",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "fryler": "bin/fryler.ts"
+  },
+  "scripts": {
+    "start": "bun run bin/fryler.ts",
+    "dev": "bun --watch bin/fryler.ts",
+    "test": "bun test",
+    "lint": "oxlint .",
+    "fmt": "oxfmt --write ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
