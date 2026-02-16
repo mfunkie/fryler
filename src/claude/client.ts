@@ -52,7 +52,7 @@ async function buildArgs(
   options?: AskOptions,
 ): Promise<string[]> {
   const config = await getConfig();
-  const args: string[] = ["-p", prompt, "--output-format", outputFormat];
+  const args: string[] = ["-p", prompt, "--output-format", outputFormat, "--dangerously-skip-permissions"];
 
   // Claude CLI requires --verbose when using --print with stream-json
   if (outputFormat === "stream-json") {
