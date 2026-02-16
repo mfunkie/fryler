@@ -176,7 +176,7 @@ export async function hostStart(config: FrylerConfig): Promise<void> {
   const claudeDir = join(homedir(), ".claude");
   mkdirSync(claudeDir, { recursive: true });
 
-  const volumes = [`${config.data_dir}:/root/.fryler`, `${claudeDir}:/root/.claude`];
+  const volumes = [`${config.data_dir}:/home/fryler/.fryler`, `${claudeDir}:/home/fryler/.claude`];
 
   // First-time bootstrap: authenticate Claude inside the container
   if (!isClaudeAuthenticated()) {
