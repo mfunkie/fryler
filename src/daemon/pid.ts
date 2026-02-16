@@ -62,4 +62,3 @@ export function acquirePid(): boolean {
   writePid();
   return true;
 }
-

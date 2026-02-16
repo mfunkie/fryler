@@ -171,7 +171,10 @@ export async function execInContainer(name: string, command: string[]): Promise<
  * Execute a command in the container with streaming stdout.
  * Returns the process for the caller to consume the stream.
  */
-export function execInContainerStreaming(name: string, command: string[]): ReturnType<typeof Bun.spawn> {
+export function execInContainerStreaming(
+  name: string,
+  command: string[],
+): ReturnType<typeof Bun.spawn> {
   return Bun.spawn(["container", "exec", name, ...command], {
     stdout: "pipe",
     stderr: "pipe",
@@ -269,7 +272,11 @@ export async function getContainerStatus(name: string): Promise<ContainerStatus>
 /**
  * Build a container image from a Dockerfile.
  */
-export async function buildImage(tag: string, contextDir: string, dockerfile?: string): Promise<void> {
+export async function buildImage(
+  tag: string,
+  contextDir: string,
+  dockerfile?: string,
+): Promise<void> {
   const args = ["container", "build", "--tag", tag];
   if (dockerfile) {
     args.push("--file", dockerfile);
@@ -331,4 +338,3 @@ export async function removeImage(tag: string): Promise<void> {
 
   logger.info("Image removed", { tag });
 }
-

@@ -7,6 +7,7 @@ import { createMemory } from "@/db/memories.ts";
 import { appendMemory } from "@/memory/index.ts";
 import { askForTask } from "@/claude/client.ts";
 import { parseClaudeResponse } from "@/tasks/parser.ts";
+import { writeSayAction } from "@/outbox/index.ts";
 import { logger } from "@/logger/index.ts";
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -79,6 +80,14 @@ export async function heartbeatTick(): Promise<void> {
         });
       }
 
+      // Queue any say actions found in the response
+      for (const say of parsed.says) {
+        await writeSayAction(say.text, say.voice);
+        logger.info(`Queued say action from task #${task.id}`, {
+          text: say.text.slice(0, 50),
+        });
+      }
+
       updateTaskStatus(task.id, "completed", parsed.cleanText);
       logger.info(`Task #${task.id} completed`);
     } catch (err) {
@@ -98,4 +107,3 @@ export async function triggerHeartbeat(): Promise<void> {
 export function isHeartbeatRunning(): boolean {
   return intervalId !== null;
 }
-

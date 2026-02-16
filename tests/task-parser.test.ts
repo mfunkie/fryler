@@ -343,3 +343,107 @@ describe("parseClaudeResponse", () => {
     expect(result.tasks[0]!.priority).toBe(3);
   });
 });
+
+describe("SAY markers", () => {
+  test("extracts a single SAY marker", () => {
+    const raw = ["Sure, I'll say that.", '<!-- FRYLER_SAY: {"text": "Hello world"} -->'].join("\n");
+    const result = parseClaudeResponse(raw);
+    expect(result.says).toHaveLength(1);
+    expect(result.says[0]!.text).toBe("Hello world");
+    expect(result.says[0]!.voice).toBeNull();
+  });
+
+  test("extracts multiple SAY markers", () => {
+    const raw = [
+      "Response.",
+      '<!-- FRYLER_SAY: {"text": "First"} -->',
+      '<!-- FRYLER_SAY: {"text": "Second"} -->',
+    ].join("\n");
+    const result = parseClaudeResponse(raw);
+    expect(result.says).toHaveLength(2);
+    expect(result.says[0]!.text).toBe("First");
+    expect(result.says[1]!.text).toBe("Second");
+  });
+
+  test("strips SAY markers from clean text", () => {
+    const raw = 'Before.\n<!-- FRYLER_SAY: {"text": "spoken"} -->\nAfter.';
+    const result = parseClaudeResponse(raw);
+    expect(result.cleanText).not.toContain("FRYLER_SAY");
+    expect(result.cleanText).not.toContain("<!--");
+    expect(result.cleanText).toContain("Before.");
+    expect(result.cleanText).toContain("After.");
+  });
+
+  test("skips SAY with missing text", () => {
+    const warnSpy = spyOn(logger, "warn").mockImplementation(() => {});
+    const raw = '<!-- FRYLER_SAY: {"voice": "Samantha"} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.says).toHaveLength(0);
+    warnSpy.mockRestore();
+  });
+
+  test("skips SAY with empty text", () => {
+    const warnSpy = spyOn(logger, "warn").mockImplementation(() => {});
+    const raw = '<!-- FRYLER_SAY: {"text": ""} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.says).toHaveLength(0);
+    warnSpy.mockRestore();
+  });
+
+  test("skips SAY with whitespace-only text", () => {
+    const warnSpy = spyOn(logger, "warn").mockImplementation(() => {});
+    const raw = '<!-- FRYLER_SAY: {"text": "   "} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.says).toHaveLength(0);
+    warnSpy.mockRestore();
+  });
+
+  test("handles malformed SAY JSON gracefully", () => {
+    const warnSpy = spyOn(logger, "warn").mockImplementation(() => {});
+    const raw = [
+      "Text.",
+      "<!-- FRYLER_SAY: {bad json} -->",
+      '<!-- FRYLER_SAY: {"text": "Valid"} -->',
+    ].join("\n");
+    const result = parseClaudeResponse(raw);
+    expect(result.says).toHaveLength(1);
+    expect(result.says[0]!.text).toBe("Valid");
+    expect(result.cleanText).not.toContain("FRYLER_SAY");
+    warnSpy.mockRestore();
+  });
+
+  test("parses optional voice field", () => {
+    const raw = '<!-- FRYLER_SAY: {"text": "Hello", "voice": "Samantha"} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.says[0]!.voice).toBe("Samantha");
+  });
+
+  test("sets voice to null when empty string", () => {
+    const raw = '<!-- FRYLER_SAY: {"text": "Hello", "voice": ""} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.says[0]!.voice).toBeNull();
+  });
+
+  test("sets voice to null when whitespace-only", () => {
+    const raw = '<!-- FRYLER_SAY: {"text": "Hello", "voice": "   "} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.says[0]!.voice).toBeNull();
+  });
+
+  test("handles mixed TASK + MEMORY + SAY markers", () => {
+    const raw = [
+      "Intro.",
+      '<!-- FRYLER_TASK: {"title": "Buy food"} -->',
+      '<!-- FRYLER_MEMORY: {"category": "fact", "content": "Cat is named Fry"} -->',
+      '<!-- FRYLER_SAY: {"text": "Reminder set", "voice": "Samantha"} -->',
+    ].join("\n");
+    const result = parseClaudeResponse(raw);
+    expect(result.tasks).toHaveLength(1);
+    expect(result.memories).toHaveLength(1);
+    expect(result.says).toHaveLength(1);
+    expect(result.tasks[0]!.title).toBe("Buy food");
+    expect(result.memories[0]!.content).toBe("Cat is named Fry");
+    expect(result.says[0]!.text).toBe("Reminder set");
+    expect(result.says[0]!.voice).toBe("Samantha");
+  });
+});

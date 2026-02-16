@@ -12,4 +12,3 @@ export function registerSignalHandlers(cleanup: () => Promise<void>): void {
   process.on("SIGTERM", () => handler("SIGTERM"));
   process.on("SIGINT", () => handler("SIGINT"));
 }
-

@@ -78,4 +78,3 @@ export async function getIdentityContext(): Promise<string> {
   const memory = await readMemory();
   return `=== FRYLER IDENTITY (SOUL.md) ===\n${soul}\n\n=== FRYLER MEMORY (MEMORY.md) ===\n${memory}`;
 }
-

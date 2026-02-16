@@ -151,4 +151,3 @@ export async function getDaemonStatus(): Promise<{
     container,
   };
 }
-

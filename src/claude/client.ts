@@ -52,7 +52,13 @@ export async function buildArgs(
   options?: AskOptions,
 ): Promise<string[]> {
   const config = await getConfig();
-  const args: string[] = ["-p", prompt, "--output-format", outputFormat, "--dangerously-skip-permissions"];
+  const args: string[] = [
+    "-p",
+    prompt,
+    "--output-format",
+    outputFormat,
+    "--dangerously-skip-permissions",
+  ];
 
   // Claude CLI requires --verbose when using --print with stream-json
   if (outputFormat === "stream-json") {
@@ -160,7 +166,10 @@ export async function ask(prompt: string, options?: AskOptions): Promise<ClaudeR
  * Streaming query to the claude CLI. Yields StreamEvent objects
  * parsed from NDJSON (one JSON object per line).
  */
-export async function* askStreaming(prompt: string, options?: AskOptions): AsyncGenerator<StreamEvent> {
+export async function* askStreaming(
+  prompt: string,
+  options?: AskOptions,
+): AsyncGenerator<StreamEvent> {
   const args = await buildArgs(prompt, "stream-json", options);
 
   logger.info("claude askStreaming", { prompt: prompt.slice(0, 100) });
@@ -225,7 +234,10 @@ export async function* askStreaming(prompt: string, options?: AskOptions): Async
  * Special wrapper for heartbeat task execution. Builds a system prompt
  * with identity context + task instructions, and uses --no-session-persistence.
  */
-export async function askForTask(taskDescription: string, context?: string): Promise<ClaudeResponse> {
+export async function askForTask(
+  taskDescription: string,
+  context?: string,
+): Promise<ClaudeResponse> {
   const identityContext = await getIdentityContext();
   const contextBlock = context ? `\n\n=== ADDITIONAL CONTEXT ===\n${context}` : "";
   const systemPrompt =
@@ -243,4 +255,3 @@ export async function askForTask(taskDescription: string, context?: string): Pro
     noSessionPersistence: true,
   });
 }
-

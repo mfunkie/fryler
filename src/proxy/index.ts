@@ -19,6 +19,12 @@ import {
   destroyContainer,
 } from "../container/manager.ts";
 import { getProjectRoot } from "../memory/index.ts";
+import {
+  processPendingActions,
+  startWatcher,
+  stopWatcher,
+  dispatchAction,
+} from "../outbox/index.ts";
 import type { FrylerConfig } from "../config/index.ts";
 
 /** Commands that need TTY passthrough (stdin: "inherit"). */
@@ -27,6 +33,7 @@ const INTERACTIVE_COMMANDS = new Set(["chat", "resume", "login"]);
 /**
  * Proxy a CLI invocation into the running container.
  * Interactive commands get full TTY passthrough.
+ * Drains/watches the outbox for host-side action dispatch.
  */
 export async function proxyToContainer(
   containerName: string,
@@ -41,13 +48,30 @@ export async function proxyToContainer(
 
   execArgs.push(containerName, "fryler", ...args);
 
+  if (interactive) {
+    // Drain any pending actions, then start watching during the session
+    await processPendingActions(dispatchAction);
+    startWatcher(dispatchAction);
+  }
+
   const proc = Bun.spawn(execArgs, {
     stdin: interactive ? "inherit" : "ignore",
     stdout: "inherit",
     stderr: "inherit",
   });
 
-  return proc.exited;
+  const exitCode = await proc.exited;
+
+  if (interactive) {
+    stopWatcher();
+    // Final drain after session ends
+    await processPendingActions(dispatchAction);
+  } else {
+    // For non-interactive commands, drain after completion
+    await processPendingActions(dispatchAction);
+  }
+
+  return exitCode;
 }
 
 /**
@@ -212,4 +236,3 @@ export async function hostStatus(config: FrylerConfig): Promise<void> {
 export function isInteractiveCommand(command: string): boolean {
   return INTERACTIVE_COMMANDS.has(command);
 }
-

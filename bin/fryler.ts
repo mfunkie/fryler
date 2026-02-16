@@ -89,6 +89,10 @@ async function hostDispatch(cmd: string): Promise<void> {
       // Read from host volume directly — works even when container is stopped
       await cmdLogs(config.data_dir);
       break;
+    case "say":
+      // Run say directly on the host (no container needed)
+      await cmdSay(positionals.slice(1));
+      break;
     case "login": {
       // Login can run without the daemon — spin up a temp container
       const { ensureImage, ensureDataDir, bootstrapLogin } = await import("@/proxy/index.ts");
@@ -165,6 +169,9 @@ async function containerDispatch(cmd: string): Promise<void> {
     case "login":
       await cmdLogin();
       break;
+    case "say":
+      await cmdSay(positionals.slice(1));
+      break;
     default:
       console.error(`Unknown command: ${cmd}`);
       showHelp();
@@ -192,6 +199,7 @@ function showHelp(): void {
   console.log("  task list [status]   List tasks");
   console.log("  task cancel <id>     Cancel a pending task");
   console.log("  heartbeat            Trigger a heartbeat cycle");
+  console.log("  say <text>           Speak text aloud via macOS TTS");
   console.log("  login                Authenticate the Claude CLI");
   console.log("\nOptions:");
   console.log("  -h, --help           Show this help");
@@ -208,15 +216,13 @@ function showHelp(): void {
 
 // ─── Host-side helpers ──────────────────────────────────────────
 
-async function hostRebuild(config: { container_image: string; container_name: string }): Promise<void> {
+async function hostRebuild(config: {
+  container_image: string;
+  container_name: string;
+}): Promise<void> {
   const { join } = await import("node:path");
-  const {
-    isContainerRunning,
-    destroyContainer,
-    imageExists,
-    removeImage,
-    buildImage,
-  } = await import("@/container/manager.ts");
+  const { isContainerRunning, destroyContainer, imageExists, removeImage, buildImage } =
+    await import("@/container/manager.ts");
   const { getProjectRoot } = await import("@/memory/index.ts");
 
   // Stop container if running
@@ -342,6 +348,10 @@ async function cmdAsk(args: string[]): Promise<void> {
   for (const mem of parsed.memories) {
     createMemory(mem.category, mem.content, "cli-ask");
     await appendMemory(mem.content);
+  }
+  for (const say of parsed.says) {
+    const { writeSayAction } = await import("@/outbox/index.ts");
+    await writeSayAction(say.text, say.voice);
   }
 }
 
@@ -516,6 +526,29 @@ async function cmdHeartbeat(): Promise<void> {
   console.log("Triggering heartbeat...");
   await triggerHeartbeat();
   console.log("Heartbeat complete.");
+}
+
+async function cmdSay(args: string[]): Promise<void> {
+  const text = args.join(" ");
+  if (!text) {
+    console.error("Usage: fryler say <text>");
+    process.exit(1);
+  }
+
+  const isContainer = process.env.FRYLER_CONTAINER === "1";
+  if (isContainer) {
+    // Inside container: write to the outbox for the host to pick up
+    const { writeSayAction } = await import("@/outbox/index.ts");
+    await writeSayAction(text);
+    console.log("Queued say action.");
+  } else {
+    // On host: run say directly
+    const proc = Bun.spawn(["say", text], {
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+    await proc.exited;
+  }
 }
 
 async function cmdLogin(): Promise<void> {

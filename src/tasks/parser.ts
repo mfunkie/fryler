@@ -16,17 +16,26 @@ export interface ParsedMemory {
   content: string;
 }
 
+export interface ParsedSay {
+  text: string;
+  voice: string | null;
+}
+
 export interface ParseResult {
   cleanText: string;
   tasks: ParsedTask[];
   memories: ParsedMemory[];
+  says: ParsedSay[];
 }
 
 /**
  * Find all markers of a given type in the text.
  * Matches: <!-- FRYLER_TYPE: {json} -->
  */
-export function extractMarkers(text: string, markerType: string): { json: string; fullMatch: string }[] {
+export function extractMarkers(
+  text: string,
+  markerType: string,
+): { json: string; fullMatch: string }[] {
   const pattern = new RegExp(`<!--\\s*FRYLER_${markerType}:\\s*(\\{.*?\\})\\s*-->`, "gs");
   const results: { json: string; fullMatch: string }[] = [];
   let match: RegExpExecArray | null;
@@ -100,12 +109,36 @@ function validateMemory(raw: unknown): ParsedMemory | null {
 }
 
 /**
- * Parse a raw Claude response, extracting task and memory markers.
- * Returns clean text (all markers stripped) plus parsed tasks and memories.
+ * Validate and normalize a parsed say object.
+ * Returns null if the say is invalid (missing required text).
+ */
+function validateSay(raw: unknown): ParsedSay | null {
+  if (typeof raw !== "object" || raw === null) {
+    logger.warn("Say marker JSON is not an object");
+    return null;
+  }
+
+  const obj = raw as Record<string, unknown>;
+
+  if (typeof obj.text !== "string" || obj.text.trim() === "") {
+    logger.warn("Say marker missing required text field", { raw: obj });
+    return null;
+  }
+
+  return {
+    text: obj.text,
+    voice: typeof obj.voice === "string" && obj.voice.trim() !== "" ? obj.voice : null,
+  };
+}
+
+/**
+ * Parse a raw Claude response, extracting task, memory, and say markers.
+ * Returns clean text (all markers stripped) plus parsed tasks, memories, and says.
  */
 export function parseClaudeResponse(rawText: string): ParseResult {
   const tasks: ParsedTask[] = [];
   const memories: ParsedMemory[] = [];
+  const says: ParsedSay[] = [];
   let cleanText = rawText;
 
   const taskMarkers = extractMarkers(rawText, "TASK");
@@ -140,9 +173,24 @@ export function parseClaudeResponse(rawText: string): ParseResult {
     cleanText = cleanText.replace(marker.fullMatch, "");
   }
 
+  const sayMarkers = extractMarkers(rawText, "SAY");
+  for (const marker of sayMarkers) {
+    try {
+      const parsed = JSON.parse(marker.json);
+      const say = validateSay(parsed);
+      if (say) {
+        says.push(say);
+      }
+    } catch {
+      logger.warn("Failed to parse say marker JSON", {
+        json: marker.json,
+      });
+    }
+    cleanText = cleanText.replace(marker.fullMatch, "");
+  }
+
   // Collapse any leftover blank lines from marker removal and trim trailing whitespace
   cleanText = cleanText.replace(/\n{3,}/g, "\n\n").trim();
 
-  return { cleanText, tasks, memories };
+  return { cleanText, tasks, memories, says };
 }
-

@@ -11,6 +11,7 @@ import { parseClaudeResponse } from "@/tasks/parser.ts";
 import { createTask } from "@/db/tasks.ts";
 import { createMemory } from "@/db/memories.ts";
 import { appendMemory } from "@/memory/index.ts";
+import { writeSayAction } from "@/outbox/index.ts";
 import { logger } from "@/logger/index.ts";
 
 export interface ReplOptions {
@@ -200,5 +201,9 @@ async function processMarkers(text: string): Promise<void> {
       category: mem.category,
     });
   }
-}
 
+  for (const say of parsed.says) {
+    await writeSayAction(say.text, say.voice);
+    logger.info("REPL: queued say action", { text: say.text.slice(0, 50) });
+  }
+}
