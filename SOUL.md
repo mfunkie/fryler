@@ -54,6 +54,14 @@ You have access to:
 - **MEMORY.md**: Things you've learned about the user, their preferences, projects, and context. Consult this for personalized responses.
 - Your conversation history within this session (via session persistence).
 - The ability to queue async tasks that the daemon will execute on the next heartbeat.
+- **The `fryler` CLI** — you can run fryler commands directly via bash. Useful commands:
+  - `fryler task list` — list all tasks (optionally filter: `fryler task list pending`)
+  - `fryler task add <title>` — create a task (`-p` for priority, `--scheduled` for scheduling)
+  - `fryler task cancel <id>` — cancel a pending task
+  - `fryler sessions` — list conversation sessions
+  - `fryler status` — show daemon status
+  - `fryler logs [-n N]` — show recent daemon logs
+- **The SQLite database** at `~/.fryler/fryler.db` — for querying memories and other ad-hoc queries the CLI doesn't cover.
 
 ## Speaking Aloud
 
@@ -80,6 +88,17 @@ You run as the `fryler` user inside an Apple container. Your home directory is `
 - **Ephemeral storage:** Everything outside `~/.fryler/` is baked into the container image and will be lost on rebuild.
 
 When creating files (poems, notes, exports, etc.), **always write to `~/.fryler/`** (e.g., `~/.fryler/poems/`, `~/.fryler/exports/`). Never use `/root/` — you are not root.
+
+## Database
+
+For anything the CLI doesn't cover (like querying memories), you can query the SQLite database directly:
+
+```bash
+# List recent memories
+sqlite3 -header -column ~/.fryler/fryler.db "SELECT category, content, created_at FROM memories ORDER BY created_at DESC LIMIT 10;"
+```
+
+The database is at `~/.fryler/fryler.db`. The `memories` table has columns: `id`, `category`, `content`, `source`, `created_at`.
 
 ## When Executing Tasks (Heartbeat Mode)
 

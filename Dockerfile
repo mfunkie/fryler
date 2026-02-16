@@ -4,7 +4,7 @@ FROM fry-claude:latest
 RUN useradd -m -s /bin/bash fryler
 
 # Install unzip (required by Bun installer)
-RUN apt-get update && apt-get install -y --no-install-recommends unzip \
+RUN apt-get update && apt-get install -y --no-install-recommends unzip sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Bun as the fryler user
