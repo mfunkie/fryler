@@ -25,7 +25,7 @@
 - Image check: `container image list` (parses table output)
 - Build: `container build --tag <tag> --file <path> <context>`
 - Interactive TTY: `container run -it` with `spawnSync` + `stdio: "inherit"`
-- Auth: mounts `~/.fry/claude-home/` → `/root/.claude` inside container
+- Auth: mounts `~/.fry/claude-home/` → `/home/fryler/.claude` inside container
 - Default image: `fry-claude:latest` built from a Dockerfile (Ubuntu 24.04 + Claude CLI)
 - Container naming: `fry-<timestamp_base36>`
 
@@ -124,7 +124,7 @@
 6. **Process spawning**: `Bun.spawn` with pipe mode, parse streams
 7. **Env cleanup**: Must unset `CLAUDECODE`/`CLAUDE_CODE_ENTRY_POINT` when spawning claude
 8. **Container-first architecture**: Daemon runs as PID1 inside the container. Host CLI is a thin proxy that manages container lifecycle and forwards commands via `container exec`. The agent can't touch anything outside its sandbox.
-9. **Volume mounts**: `~/.fryler/data/` → `/root/.fryler/` for persistent data, `~/.claude/` → `/root/.claude/` for auth tokens.
+9. **Volume mounts**: `~/.fryler/data/` → `/home/fryler/.fryler/` for persistent data, `~/.claude/` → `/home/fryler/.claude/` for auth tokens.
 10. **Host/container detection**: `FRYLER_CONTAINER=1` env var (set in Dockerfile) distinguishes modes. Host handles start/stop/status/logs/login locally; everything else proxied.
 11. **Identity path resolution**: Inside container, SOUL.md/MEMORY.md resolve from `~/.fryler/` (persistent volume). On host (dev), they resolve from project root. `initIdentityFiles()` copies baked-in defaults on first container run.
 12. **First-time bootstrap**: On first `fryler start`, if Claude CLI credentials aren't found in `~/.claude/`, a temporary container is started for interactive login before the daemon boots.

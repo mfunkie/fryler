@@ -41,13 +41,19 @@ export function initIdentityFiles(): void {
   mkdirSync(targetDir, { recursive: true });
 
   const sourceDir = "/opt/fryler";
-  for (const file of ["SOUL.md", "MEMORY.md"]) {
-    const target = join(targetDir, file);
-    if (!existsSync(target)) {
-      const source = join(sourceDir, file);
-      if (existsSync(source)) {
-        copyFileSync(source, target);
-      }
+
+  // SOUL.md: always overwrite from image defaults so edits take effect on rebuild
+  const soulSource = join(sourceDir, "SOUL.md");
+  if (existsSync(soulSource)) {
+    copyFileSync(soulSource, join(targetDir, "SOUL.md"));
+  }
+
+  // MEMORY.md: only seed on first run, never overwrite
+  const memTarget = join(targetDir, "MEMORY.md");
+  if (!existsSync(memTarget)) {
+    const memSource = join(sourceDir, "MEMORY.md");
+    if (existsSync(memSource)) {
+      copyFileSync(memSource, memTarget);
     }
   }
 }

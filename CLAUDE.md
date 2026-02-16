@@ -26,8 +26,8 @@ HOST (bin/fryler.ts — thin proxy)          CONTAINER (fryler-runtime)
 │ fryler *     → container exec            │   - Claude CLI sessions      │
 │                             │            │   - Logs                     │
 │ ~/.fryler/config.toml       │            │                              │
-│ ~/.fryler/data/ ──(volume)──│───────────>│ /root/.fryler/               │
-│ ~/.claude/    ──(volume)────│───────────>│ /root/.claude/               │
+│ ~/.fryler/data/ ──(volume)──│───────────>│ /home/fryler/.fryler/        │
+│ ~/.claude/    ──(volume)────│───────────>│ /home/fryler/.claude/        │
 └─────────────────────────────┘            └──────────────────────────────┘
 ```
 
@@ -45,7 +45,7 @@ src/logger/index.ts        Structured logging with daily rotation
 src/memory/index.ts        SOUL.md / MEMORY.md — container-aware path resolution
 src/repl/index.ts          Interactive REPL with streaming and session tracking
 src/tasks/parser.ts        FRYLER_TASK / FRYLER_MEMORY marker extraction from responses
-Dockerfile                 Container image: fry-claude + Bun + fryler source
+Dockerfile                 Container image: compiles to standalone binary via bun build
 ```
 
 ## Key Patterns
@@ -59,8 +59,8 @@ The daemon runs inside an Apple container. The host CLI (`bin/fryler.ts`) checks
 
 Volume mounts persist data across container restarts:
 
-- `~/.fryler/data/` → `/root/.fryler/` (DB, identity files, logs)
-- `~/.claude/` → `/root/.claude/` (Claude CLI auth tokens)
+- `~/.fryler/data/` → `/home/fryler/.fryler/` (DB, identity files, logs)
+- `~/.claude/` → `/home/fryler/.claude/` (Claude CLI auth tokens)
 
 ### First-Time Bootstrap
 
@@ -68,7 +68,7 @@ On first `fryler start`, if Claude CLI credentials aren't found in `~/.claude/`,
 
 ### Claude CLI Invocation
 
-All AI work goes through `Bun.spawn(["claude", ...args])`. The `buildClaudeEnv()` function strips `CLAUDECODE` and `CLAUDE_CODE_ENTRY_POINT` from the environment to prevent nesting detection. Identity context (SOUL.md + MEMORY.md) is injected via `--system-prompt`.
+All AI work goes through `Bun.spawn(["claude", ...args])`. The `buildClaudeEnv()` function strips `CLAUDECODE` and `CLAUDE_CODE_ENTRY_POINT` from the environment to prevent nesting detection. Identity context (SOUL.md + MEMORY.md) is injected via `--system-prompt`. The spawn uses `cwd: homedir()` so the Claude CLI never discovers project source files.
 
 ### Session Management
 
@@ -85,7 +85,7 @@ These are stripped from display output and persisted to SQLite / MEMORY.md.
 
 ### Testing
 
-- `bun test` — 134 tests across 9 test files.
+- `bun test` — 152 tests across 10 test files.
 - Tests use isolated temp SQLite DBs via `_setDbPath()`.
 - Avoid `mock.module()` — it pollutes the global module cache across test files in Bun. Use dependency injection or test only the DB/lifecycle layer directly.
 
@@ -101,7 +101,7 @@ bun run dev       # watch mode
 ## File Locations
 
 - Host config: `~/.fryler/config.toml`
-- Host data volume: `~/.fryler/data/` (mounted into container as `/root/.fryler/`)
-- Container identity: `/root/.fryler/SOUL.md`, `/root/.fryler/MEMORY.md`
-- Container database: `/root/.fryler/fryler.db` (SQLite WAL mode)
-- Claude auth: `~/.claude/` (mounted into container as `/root/.claude/`)
+- Host data volume: `~/.fryler/data/` (mounted into container as `/home/fryler/.fryler/`)
+- Container identity: `~/.fryler/SOUL.md` (overwritten from image defaults on every start), `~/.fryler/MEMORY.md` (seeded once, never overwritten)
+- Container database: `~/.fryler/fryler.db` (SQLite WAL mode)
+- Claude auth: `~/.claude/` (mounted into container as `/home/fryler/.claude/`)

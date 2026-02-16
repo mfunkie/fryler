@@ -82,8 +82,8 @@ HOST (bin/fryler.ts — thin proxy)          CONTAINER (fryler-runtime)
 │ fryler *     → container exec            │   - Claude CLI sessions      │
 │                             │            │   - Logs                     │
 │ ~/.fryler/config.toml       │            │                              │
-│ ~/.fryler/data/ ──(volume)──│───────────>│ /root/.fryler/               │
-│ ~/.claude/    ──(volume)────│───────────>│ /root/.claude/               │
+│ ~/.fryler/data/ ──(volume)──│───────────>│ /home/fryler/.fryler/        │
+│ ~/.claude/    ──(volume)────│───────────>│ /home/fryler/.claude/        │
 └─────────────────────────────┘            └──────────────────────────────┘
 ```
 
@@ -108,7 +108,7 @@ src/
   memory/index.ts          SOUL.md / MEMORY.md (container-aware path resolution)
   repl/index.ts            Interactive REPL with streaming
   tasks/parser.ts          FRYLER_TASK / FRYLER_MEMORY marker extraction
-Dockerfile                 Container image definition
+Dockerfile                 Container image (compiles to standalone binary via bun build)
 ```
 
 ### How It Works
@@ -118,17 +118,19 @@ Dockerfile                 Container image definition
 3. **`fryler start`** on the host runs `container run --detach` with volume mounts, starting the daemon as PID1 inside the container
 4. **Daemon** acquires a PID lock, initializes identity files, SQLite DB, and starts the heartbeat loop
 5. **Heartbeat** checks for due tasks every N seconds, sends each to Claude via the CLI, parses the response for task/memory markers
-6. **Claude CLI** is invoked via `Bun.spawn` with identity context (SOUL.md + MEMORY.md) injected as the system prompt
+6. **Claude CLI** is invoked via `Bun.spawn` with `cwd: homedir()` and identity context (SOUL.md + MEMORY.md) injected as the system prompt. The home cwd ensures the agent never discovers project source files
 7. **Sessions** are tracked automatically — sequential `fryler ask` calls continue the same conversation
 8. **Interactive commands** (`chat`, `resume`, `login`) are proxied with TTY passthrough via `container exec -it`
 9. **`fryler logs`** reads from the host volume directly, working even when the container is stopped
 
 ### Identity Files
 
-- **SOUL.md** — Read-only personality and behavior instructions. Fryler never modifies this.
-- **MEMORY.md** — Append-only knowledge. Fryler adds entries as it learns things about you.
+- **SOUL.md** — Personality and behavior instructions. Overwritten from image defaults on every daemon start, so edits take effect after a rebuild.
+- **MEMORY.md** — Append-only knowledge. Fryler adds entries as it learns things about you. Seeded from image defaults on first run, never overwritten.
 
-On first container run, these are copied from baked-in defaults (`/opt/fryler/`) to the persistent volume (`/root/.fryler/`).
+### Container Isolation
+
+The Dockerfile compiles source to a standalone binary (`/usr/local/bin/fryler`) via `bun build --compile`, then discards all source files. The only non-runtime files in the container are the identity defaults at `/opt/fryler/{SOUL,MEMORY}.md`. The agent has no access to its own source code.
 
 ### Configuration
 
@@ -148,7 +150,7 @@ All values have sensible defaults.
 ## Development
 
 ```bash
-bun test              # 134 tests
+bun test              # 152 tests
 bun run lint          # oxlint
 bun run fmt           # oxfmt
 bun run dev           # watch mode

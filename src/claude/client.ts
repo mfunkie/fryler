@@ -3,6 +3,7 @@
  * All AI work is done by shelling out to the `claude` CLI.
  */
 
+import { homedir } from "node:os";
 import { getIdentityContext } from "@/memory/index.ts";
 import { getConfig } from "@/config/index.ts";
 import { logger } from "@/logger/index.ts";
@@ -138,6 +139,7 @@ export async function ask(prompt: string, options?: AskOptions): Promise<ClaudeR
     stdout: "pipe",
     stderr: "pipe",
     env: buildClaudeEnv(),
+    cwd: homedir(),
   });
 
   const stdout = await new Response(proc.stdout).text();
@@ -178,6 +180,7 @@ export async function* askStreaming(
     stdout: "pipe",
     stderr: "pipe",
     env: buildClaudeEnv(),
+    cwd: homedir(),
   });
 
   const reader = proc.stdout.getReader();
