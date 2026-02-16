@@ -70,7 +70,7 @@ export function getDueTasks(): Task[] {
   const stmt = db.prepare(
     `SELECT * FROM tasks
      WHERE status = 'pending'
-       AND (scheduled_at IS NULL OR scheduled_at <= datetime('now'))`,
+       AND (scheduled_at IS NULL OR datetime(scheduled_at) <= datetime('now'))`,
   );
   return stmt.all() as Task[];
 }
