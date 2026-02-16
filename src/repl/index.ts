@@ -17,6 +17,10 @@ import { logger } from "@/logger/index.ts";
 export interface ReplOptions {
   sessionId?: string;
   autoResume?: boolean;
+  voice?: string;
+  systemPrompt?: string;
+  sessionPrefix?: string;
+  model?: string;
 }
 
 export async function startRepl(options?: ReplOptions): Promise<void> {
@@ -26,7 +30,11 @@ export async function startRepl(options?: ReplOptions): Promise<void> {
   let hasExchanged = false; // true after first successful message in this session
   let messageCount = 0;
 
-  console.log("fryler interactive mode. Type /help for commands, /quit to exit.");
+  if (options?.voice) {
+    console.log(`fryler voice mode (${options.voice}). Type /help for commands, /quit to exit.`);
+  } else {
+    console.log("fryler interactive mode. Type /help for commands, /quit to exit.");
+  }
   if (sessionId) {
     console.log(`Resuming session: ${sessionId}`);
   }
@@ -64,6 +72,12 @@ export async function startRepl(options?: ReplOptions): Promise<void> {
     // Send to Claude with streaming
     try {
       const askOpts: AskOptions = {};
+      if (options?.systemPrompt) {
+        askOpts.systemPrompt = options.systemPrompt;
+      }
+      if (options?.model) {
+        askOpts.model = options.model;
+      }
       if (hasExchanged || options?.autoResume) {
         // Use --continue to resume without session lock conflicts
         askOpts.continueSession = true;
@@ -123,7 +137,8 @@ export async function startRepl(options?: ReplOptions): Promise<void> {
           sessionId = resultSessionId;
           // Only create if not already tracked (e.g. auto-resumed via --continue)
           if (!getSession(sessionId)) {
-            createSession(sessionId, `[chat] ${input.slice(0, 80)}`);
+            const prefix = options?.sessionPrefix ?? "[chat]";
+            createSession(sessionId, `${prefix} ${input.slice(0, 80)}`);
           }
         }
         hasExchanged = true;
@@ -134,6 +149,14 @@ export async function startRepl(options?: ReplOptions): Promise<void> {
       // Silently process markers from the full result
       if (fullResult) {
         await processMarkers(fullResult);
+      }
+
+      // Auto-speak response in voice mode
+      if (options?.voice && fullResult) {
+        const voiceParsed = parseClaudeResponse(fullResult);
+        if (voiceParsed.cleanText) {
+          await writeSayAction(voiceParsed.cleanText, options.voice);
+        }
       }
     } catch (err) {
       console.error("\nError:", err instanceof Error ? err.message : String(err));

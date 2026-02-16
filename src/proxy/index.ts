@@ -28,7 +28,7 @@ import {
 import type { FrylerConfig } from "../config/index.ts";
 
 /** Commands that need TTY passthrough (stdin: "inherit"). */
-const INTERACTIVE_COMMANDS = new Set(["chat", "resume", "login"]);
+const INTERACTIVE_COMMANDS = new Set(["chat", "resume", "login", "voice"]);
 
 /**
  * Proxy a CLI invocation into the running container.

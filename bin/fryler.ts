@@ -152,6 +152,9 @@ async function containerDispatch(cmd: string): Promise<void> {
     case "chat":
       await cmdChat();
       break;
+    case "voice":
+      await cmdVoice();
+      break;
     case "logs":
       await cmdLogs();
       break;
@@ -193,6 +196,7 @@ function showHelp(): void {
   console.log("  status               Show daemon and container status");
   console.log("  ask <prompt>         One-shot query to Claude");
   console.log("  chat                 Interactive REPL session");
+  console.log("  voice [--voice <n>]  Voice chat (responses spoken aloud, default: Zarvox)");
   console.log("  logs [-f] [-n N]     Show daemon logs");
   console.log("  sessions             List conversation sessions");
   console.log("  resume <session-id>  Resume a conversation session");
@@ -376,6 +380,48 @@ async function cmdChat(): Promise<void> {
     const sessions = listSessions();
     const chatSession = sessions.find((s) => s.title?.startsWith("[chat] "));
     if (chatSession) {
+      opts.autoResume = true;
+    }
+  }
+
+  await startRepl(opts);
+}
+
+async function cmdVoice(): Promise<void> {
+  if (!values.verbose) {
+    const { logger } = await import("@/logger/index.ts");
+    logger.setQuiet(true);
+  }
+
+  const { getDb } = await import("@/db/index.ts");
+  const { startRepl } = await import("@/repl/index.ts");
+  const { listSessions } = await import("@/db/sessions.ts");
+
+  getDb();
+
+  const voice = (values.voice as string) || "Zarvox";
+
+  const opts: {
+    sessionId?: string;
+    autoResume?: boolean;
+    voice?: string;
+    systemPrompt?: string;
+    sessionPrefix?: string;
+    model?: string;
+  } = {
+    voice,
+    sessionPrefix: "[voice]",
+    model: (values.model as string) || "sonnet",
+    systemPrompt:
+      "You are Fryler, an autonomous AI daemon. Your responses will be spoken aloud via text-to-speech. Keep responses brief, conversational, and natural-sounding. Avoid markdown formatting, code blocks, bullet lists, and special characters — speak as you would in a real conversation.",
+  };
+
+  if (values.session) {
+    opts.sessionId = values.session as string;
+  } else if (!values.new) {
+    const sessions = listSessions();
+    const voiceSession = sessions.find((s) => s.title?.startsWith("[voice] "));
+    if (voiceSession) {
       opts.autoResume = true;
     }
   }
