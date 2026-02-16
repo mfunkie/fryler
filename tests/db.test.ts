@@ -191,8 +191,6 @@ describe("Sessions", () => {
 
   test("update session", () => {
     createSession("sess-002");
-    const before = getSession("sess-002")!;
-
     updateSession("sess-002", 5);
     const after = getSession("sess-002")!;
     expect(after.message_count).toBe(5);

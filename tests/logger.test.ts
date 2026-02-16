@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, afterAll, spyOn } from "bun:test";
 import { logger } from "@/logger/index.ts";
-import { rmSync, existsSync, readFileSync, readdirSync } from "node:fs";
+import { rmSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 

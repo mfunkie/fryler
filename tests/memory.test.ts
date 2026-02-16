@@ -5,7 +5,6 @@ import {
   getProjectRoot,
   readSoul,
   readMemory,
-  appendMemory,
   getIdentityContext,
 } from "../src/memory/index";
 

@@ -1,4 +1,4 @@
-import { describe, expect, test, mock, beforeEach } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { buildClaudeEnv, buildArgs, parseClaudeOutput } from "@/claude/client.ts";
 
 describe("buildClaudeEnv", () => {

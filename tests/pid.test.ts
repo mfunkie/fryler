@@ -1,7 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, existsSync, readFileSync, rmSync } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
+import { existsSync, rmSync } from "fs";
 
 // We need to override the PID path for testing, so we mock the module
 // by importing the actual functions and using a temp dir approach.
@@ -20,7 +18,6 @@ import {
 
 describe("pid", () => {
   let originalPidPath: string;
-  let tempDir: string;
   let pidFileExistedBefore: boolean;
 
   beforeEach(() => {
