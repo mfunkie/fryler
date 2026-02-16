@@ -24,7 +24,9 @@ async function startDaemon(): Promise<void> {
   // Check for existing instance
   if (!acquirePid()) {
     const existingPid = readPid();
-    console.error(`fryler daemon is already running (PID ${existingPid}). Use 'fryler stop' first.`);
+    console.error(
+      `fryler daemon is already running (PID ${existingPid}). Use 'fryler stop' first.`,
+    );
     process.exit(1);
   }
 
@@ -160,9 +162,4 @@ async function getDaemonStatus(): Promise<{
   };
 }
 
-export {
-  startDaemon,
-  stopDaemon,
-  getDaemonStatus,
-  triggerHeartbeat,
-};
+export { startDaemon, stopDaemon, getDaemonStatus, triggerHeartbeat };

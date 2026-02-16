@@ -172,9 +172,7 @@ describe("parseClaudeOutput", () => {
   });
 
   test("throws on non-object/non-array output", () => {
-    expect(() => parseClaudeOutput('"just a string"')).toThrow(
-      "Unexpected claude output type",
-    );
+    expect(() => parseClaudeOutput('"just a string"')).toThrow("Unexpected claude output type");
   });
 
   test("handles missing fields with defaults", () => {

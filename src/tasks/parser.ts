@@ -26,14 +26,8 @@ export interface ParseResult {
  * Find all markers of a given type in the text.
  * Matches: <!-- FRYLER_TYPE: {json} -->
  */
-function extractMarkers(
-  text: string,
-  markerType: string,
-): { json: string; fullMatch: string }[] {
-  const pattern = new RegExp(
-    `<!--\\s*FRYLER_${markerType}:\\s*(\\{.*?\\})\\s*-->`,
-    "gs",
-  );
+function extractMarkers(text: string, markerType: string): { json: string; fullMatch: string }[] {
+  const pattern = new RegExp(`<!--\\s*FRYLER_${markerType}:\\s*(\\{.*?\\})\\s*-->`, "gs");
   const results: { json: string; fullMatch: string }[] = [];
   let match: RegExpExecArray | null;
 
@@ -73,8 +67,7 @@ function validateTask(raw: unknown): ParsedTask | null {
     title: obj.title,
     description: typeof obj.description === "string" ? obj.description : "",
     priority,
-    scheduled_at:
-      typeof obj.scheduled_at === "string" ? obj.scheduled_at : null,
+    scheduled_at: typeof obj.scheduled_at === "string" ? obj.scheduled_at : null,
   };
 }
 

@@ -1,8 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import {
-  isContainerAvailable,
-  imageExists,
-} from "../src/container/manager.ts";
+import { isContainerAvailable, imageExists } from "../src/container/manager.ts";
 
 describe("container manager", () => {
   test("isContainerAvailable returns true when CLI exists", async () => {

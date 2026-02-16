@@ -1,10 +1,4 @@
-import {
-  mkdirSync,
-  existsSync,
-  unlinkSync,
-  writeFileSync,
-  readFileSync,
-} from "fs";
+import { mkdirSync, existsSync, unlinkSync, writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 
@@ -69,12 +63,4 @@ function acquirePid(): boolean {
   return true;
 }
 
-export {
-  getFrylerDir,
-  getPidPath,
-  writePid,
-  readPid,
-  isRunning,
-  removePid,
-  acquirePid,
-};
+export { getFrylerDir, getPidPath, writePid, readPid, isRunning, removePid, acquirePid };

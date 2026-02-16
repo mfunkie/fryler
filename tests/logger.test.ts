@@ -38,7 +38,7 @@ describe("logger", () => {
     logger.info("test message");
     const content = readFileSync(TEST_LOG_FILE, "utf-8").trim();
     const match = content.match(
-      /^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\] \[INFO\] test message$/
+      /^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\] \[INFO\] test message$/,
     );
     expect(match).not.toBeNull();
   });
@@ -46,9 +46,7 @@ describe("logger", () => {
   test("log line includes JSON data when provided", () => {
     logger.info("with data", { key: "value", num: 42 });
     const content = readFileSync(TEST_LOG_FILE, "utf-8").trim();
-    const match = content.match(
-      /^\[.+\] \[INFO\] with data (.+)$/
-    );
+    const match = content.match(/^\[.+\] \[INFO\] with data (.+)$/);
     expect(match).not.toBeNull();
     const parsed = JSON.parse(match![1]!);
     expect(parsed).toEqual({ key: "value", num: 42 });

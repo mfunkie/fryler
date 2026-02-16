@@ -151,10 +151,7 @@ async function startContainer(config: ContainerConfig): Promise<void> {
 /**
  * Execute a command inside a running container.
  */
-async function execInContainer(
-  name: string,
-  command: string[],
-): Promise<ExecResult> {
+async function execInContainer(name: string, command: string[]): Promise<ExecResult> {
   const proc = Bun.spawn(["container", "exec", name, ...command], {
     stdout: "pipe",
     stderr: "pipe",
@@ -171,10 +168,7 @@ async function execInContainer(
  * Execute a command in the container with streaming stdout.
  * Returns the process for the caller to consume the stream.
  */
-function execInContainerStreaming(
-  name: string,
-  command: string[],
-): ReturnType<typeof Bun.spawn> {
+function execInContainerStreaming(name: string, command: string[]): ReturnType<typeof Bun.spawn> {
   return Bun.spawn(["container", "exec", name, ...command], {
     stdout: "pipe",
     stderr: "pipe",
@@ -257,12 +251,8 @@ async function getContainerStatus(name: string): Promise<ContainerStatus> {
 
     if (exitCode === 0) {
       const info = JSON.parse(stdout);
-      const startedDate = info?.startedDate
-        ? new Date(info.startedDate * 1000)
-        : null;
-      const uptime = startedDate
-        ? formatUptime(Date.now() - startedDate.getTime())
-        : undefined;
+      const startedDate = info?.startedDate ? new Date(info.startedDate * 1000) : null;
+      const uptime = startedDate ? formatUptime(Date.now() - startedDate.getTime()) : undefined;
 
       return { running: true, name, uptime };
     }

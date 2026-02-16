@@ -46,10 +46,7 @@ async function heartbeatTick(): Promise<void> {
       logger.info(`Processing task #${task.id}: ${task.title}`);
       updateTaskStatus(task.id, "active");
 
-      const response = await askForTask(
-        task.description || task.title,
-        task.title,
-      );
+      const response = await askForTask(task.description || task.title, task.title);
 
       logger.info(`Task #${task.id} claude response received`, {
         session_id: response.session_id,
@@ -102,10 +99,4 @@ function isHeartbeatRunning(): boolean {
   return intervalId !== null;
 }
 
-export {
-  startHeartbeat,
-  stopHeartbeat,
-  heartbeatTick,
-  triggerHeartbeat,
-  isHeartbeatRunning,
-};
+export { startHeartbeat, stopHeartbeat, heartbeatTick, triggerHeartbeat, isHeartbeatRunning };

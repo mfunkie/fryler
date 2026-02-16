@@ -153,11 +153,7 @@ async function cmdAsk(args: string[]): Promise<void> {
   const { createTask } = await import("@/db/tasks.ts");
   const { createMemory } = await import("@/db/memories.ts");
   const { appendMemory } = await import("@/memory/index.ts");
-  const {
-    createSession,
-    updateSession,
-    listSessions,
-  } = await import("@/db/sessions.ts");
+  const { createSession, updateSession, listSessions } = await import("@/db/sessions.ts");
 
   getDb();
 
@@ -311,18 +307,11 @@ async function cmdTask(args: string[]): Promise<void> {
       const priority = values.priority ? Number(values.priority) : 3;
       const scheduled_at = (values.scheduled as string) ?? null;
       const task = createTask({ title, priority, scheduled_at });
-      console.log(
-        `Created task #${task.id}: ${task.title} (priority: ${task.priority})`,
-      );
+      console.log(`Created task #${task.id}: ${task.title} (priority: ${task.priority})`);
       break;
     }
     case "list": {
-      const status = args[1] as
-        | "pending"
-        | "active"
-        | "completed"
-        | "failed"
-        | undefined;
+      const status = args[1] as "pending" | "active" | "completed" | "failed" | undefined;
       const tasks = listTasks(status);
       if (tasks.length === 0) {
         console.log(status ? `No ${status} tasks.` : "No tasks.");
@@ -330,17 +319,10 @@ async function cmdTask(args: string[]): Promise<void> {
       }
       console.log("Tasks:\n");
       for (const t of tasks) {
-        const sched = t.scheduled_at
-          ? ` (scheduled: ${t.scheduled_at})`
-          : "";
-        console.log(
-          `  #${t.id} [${t.status}] ${t.title} (p${t.priority})${sched}`,
-        );
+        const sched = t.scheduled_at ? ` (scheduled: ${t.scheduled_at})` : "";
+        console.log(`  #${t.id} [${t.status}] ${t.title} (p${t.priority})${sched}`);
         if (t.result) {
-          const preview =
-            t.result.length > 100
-              ? t.result.slice(0, 100) + "..."
-              : t.result;
+          const preview = t.result.length > 100 ? t.result.slice(0, 100) + "..." : t.result;
           console.log(`    Result: ${preview}`);
         }
       }
@@ -354,11 +336,7 @@ async function cmdTask(args: string[]): Promise<void> {
         process.exit(1);
       }
       const ok = cancelTask(id);
-      console.log(
-        ok
-          ? `Cancelled task #${id}.`
-          : `Could not cancel task #${id} (not pending?).`,
-      );
+      console.log(ok ? `Cancelled task #${id}.` : `Could not cancel task #${id} (not pending?).`);
       break;
     }
     default:

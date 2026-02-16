@@ -3,11 +3,7 @@ import { join } from "path";
 import { unlinkSync } from "fs";
 import { getDb, closeDb, _setDbPath } from "@/db/index.ts";
 import { createTask, getTask, getDueTasks, updateTaskStatus } from "@/db/tasks.ts";
-import {
-  startHeartbeat,
-  stopHeartbeat,
-  isHeartbeatRunning,
-} from "@/daemon/heartbeat.ts";
+import { startHeartbeat, stopHeartbeat, isHeartbeatRunning } from "@/daemon/heartbeat.ts";
 
 const TEST_DB_PATH = join("/tmp", `fryler-heartbeat-test-${Date.now()}.db`);
 
@@ -66,7 +62,7 @@ describe("Heartbeat task DB operations", () => {
   test("getDueTasks returns pending tasks", () => {
     const task = createTask({ title: "Due task" });
     const due = getDueTasks();
-    expect(due.some(t => t.id === task.id)).toBe(true);
+    expect(due.some((t) => t.id === task.id)).toBe(true);
   });
 
   test("getDueTasks excludes future-scheduled tasks", () => {
@@ -75,7 +71,7 @@ describe("Heartbeat task DB operations", () => {
       scheduled_at: "2099-01-01T00:00:00",
     });
     const due = getDueTasks();
-    expect(due.some(t => t.id === task.id)).toBe(false);
+    expect(due.some((t) => t.id === task.id)).toBe(false);
   });
 
   test("updateTaskStatus transitions pending to active", () => {

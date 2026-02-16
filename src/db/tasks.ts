@@ -50,16 +50,10 @@ export function listTasks(status?: Task["status"]): Task[] {
   return db.prepare("SELECT * FROM tasks").all() as Task[];
 }
 
-export function updateTaskStatus(
-  id: number,
-  status: Task["status"],
-  result?: string,
-): void {
+export function updateTaskStatus(id: number, status: Task["status"], result?: string): void {
   const db = getDb();
   const completedAt =
-    status === "completed" || status === "failed"
-      ? "datetime('now')"
-      : "completed_at";
+    status === "completed" || status === "failed" ? "datetime('now')" : "completed_at";
   const stmt = db.prepare(
     `UPDATE tasks
      SET status = $status,

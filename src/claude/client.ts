@@ -88,7 +88,9 @@ function parseClaudeOutput(raw: string): ClaudeResponse {
   if (Array.isArray(parsed)) {
     const found = parsed.find(
       (item: unknown) =>
-        typeof item === "object" && item !== null && (item as Record<string, unknown>).type === "result",
+        typeof item === "object" &&
+        item !== null &&
+        (item as Record<string, unknown>).type === "result",
     );
     if (!found) {
       throw new Error("No result object found in claude JSON array output");
@@ -113,10 +115,7 @@ function parseClaudeOutput(raw: string): ClaudeResponse {
 /**
  * One-shot query to the claude CLI. Returns parsed ClaudeResponse.
  */
-async function ask(
-  prompt: string,
-  options?: AskOptions,
-): Promise<ClaudeResponse> {
+async function ask(prompt: string, options?: AskOptions): Promise<ClaudeResponse> {
   const args = await buildArgs(prompt, "json", options);
 
   logger.info("claude ask", { prompt: prompt.slice(0, 100), args_count: args.length });
@@ -153,10 +152,7 @@ async function ask(
  * Streaming query to the claude CLI. Yields StreamEvent objects
  * parsed from NDJSON (one JSON object per line).
  */
-async function* askStreaming(
-  prompt: string,
-  options?: AskOptions,
-): AsyncGenerator<StreamEvent> {
+async function* askStreaming(prompt: string, options?: AskOptions): AsyncGenerator<StreamEvent> {
   const args = await buildArgs(prompt, "stream-json", options);
 
   logger.info("claude askStreaming", { prompt: prompt.slice(0, 100) });
@@ -221,10 +217,7 @@ async function* askStreaming(
  * Special wrapper for heartbeat task execution. Builds a system prompt
  * with identity context + task instructions, and uses --no-session-persistence.
  */
-async function askForTask(
-  taskDescription: string,
-  context?: string,
-): Promise<ClaudeResponse> {
+async function askForTask(taskDescription: string, context?: string): Promise<ClaudeResponse> {
   const identityContext = await getIdentityContext();
   const contextBlock = context ? `\n\n=== ADDITIONAL CONTEXT ===\n${context}` : "";
   const systemPrompt =
@@ -243,11 +236,4 @@ async function askForTask(
   });
 }
 
-export {
-  buildClaudeEnv,
-  buildArgs,
-  parseClaudeOutput,
-  ask,
-  askStreaming,
-  askForTask,
-};
+export { buildClaudeEnv, buildArgs, parseClaudeOutput, ask, askStreaming, askForTask };

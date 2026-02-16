@@ -119,10 +119,7 @@ describe("loadConfig", () => {
 
   test("merges file values with defaults (file values win)", async () => {
     const configPath = join(tempDir, "config.toml");
-    await writeFile(
-      configPath,
-      `log_level = "debug"\nclaude_max_turns = 50\n`,
-    );
+    await writeFile(configPath, `log_level = "debug"\nclaude_max_turns = 50\n`);
 
     const config = await loadConfig(configPath);
     expect(config.log_level).toBe("debug");

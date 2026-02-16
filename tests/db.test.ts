@@ -11,12 +11,7 @@ import {
   cancelTask,
 } from "@/db/tasks.ts";
 import { createMemory, listMemories, searchMemories } from "@/db/memories.ts";
-import {
-  createSession,
-  getSession,
-  updateSession,
-  listSessions,
-} from "@/db/sessions.ts";
+import { createSession, getSession, updateSession, listSessions } from "@/db/sessions.ts";
 
 const TEST_DB_PATH = join("/tmp", `fryler-test-${Date.now()}.db`);
 
@@ -40,9 +35,7 @@ describe("DB init", () => {
   test("creates all tables", () => {
     const db = getDb();
     const tables = db
-      .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
-      )
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
       .all() as { name: string }[];
     const names = tables.map((t) => t.name);
     expect(names).toContain("tasks");
@@ -215,12 +208,8 @@ describe("Sessions", () => {
     const sessions = listSessions();
     expect(sessions.length).toBeGreaterThanOrEqual(2);
     // sess-003 should appear before sess-004 since it was updated more recently
-    const idx003 = sessions.findIndex(
-      (s) => s.claude_session_id === "sess-003",
-    );
-    const idx004 = sessions.findIndex(
-      (s) => s.claude_session_id === "sess-004",
-    );
+    const idx003 = sessions.findIndex((s) => s.claude_session_id === "sess-003");
+    const idx004 = sessions.findIndex((s) => s.claude_session_id === "sess-004");
     expect(idx003).toBeLessThan(idx004);
   });
 });

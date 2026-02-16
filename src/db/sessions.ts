@@ -9,10 +9,7 @@ export interface Session {
   message_count: number;
 }
 
-export function createSession(
-  claude_session_id: string,
-  title?: string,
-): Session {
+export function createSession(claude_session_id: string, title?: string): Session {
   const db = getDb();
   const stmt = db.prepare(
     `INSERT INTO sessions (claude_session_id, title)
@@ -30,18 +27,11 @@ export function createSession(
 
 export function getSession(claude_session_id: string): Session | null {
   const db = getDb();
-  const stmt = db.prepare(
-    "SELECT * FROM sessions WHERE claude_session_id = $claude_session_id",
-  );
-  return (
-    (stmt.get({ $claude_session_id: claude_session_id }) as Session) ?? null
-  );
+  const stmt = db.prepare("SELECT * FROM sessions WHERE claude_session_id = $claude_session_id");
+  return (stmt.get({ $claude_session_id: claude_session_id }) as Session) ?? null;
 }
 
-export function updateSession(
-  claude_session_id: string,
-  message_count?: number,
-): void {
+export function updateSession(claude_session_id: string, message_count?: number): void {
   const db = getDb();
   if (message_count !== undefined) {
     const stmt = db.prepare(
@@ -65,7 +55,5 @@ export function updateSession(
 
 export function listSessions(): Session[] {
   const db = getDb();
-  return db
-    .prepare("SELECT * FROM sessions ORDER BY last_active_at DESC")
-    .all() as Session[];
+  return db.prepare("SELECT * FROM sessions ORDER BY last_active_at DESC").all() as Session[];
 }

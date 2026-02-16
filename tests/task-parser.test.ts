@@ -159,7 +159,7 @@ describe("parseClaudeResponse", () => {
 
   test("handles malformed memory JSON gracefully", () => {
     const warnSpy = spyOn(logger, "warn").mockImplementation(() => {});
-    const raw = 'Text.\n<!-- FRYLER_MEMORY: {not valid json} -->';
+    const raw = "Text.\n<!-- FRYLER_MEMORY: {not valid json} -->";
     const result = parseClaudeResponse(raw);
     expect(result.memories).toHaveLength(0);
     expect(result.cleanText).toBe("Text.");
@@ -296,13 +296,14 @@ describe("parseClaudeResponse", () => {
   });
 
   test("preserves scheduled_at string value", () => {
-    const raw = '<!-- FRYLER_TASK: {"title": "Scheduled", "scheduled_at": "2026-03-01T10:00:00Z"} -->';
+    const raw =
+      '<!-- FRYLER_TASK: {"title": "Scheduled", "scheduled_at": "2026-03-01T10:00:00Z"} -->';
     const result = parseClaudeResponse(raw);
     expect(result.tasks[0]!.scheduled_at).toBe("2026-03-01T10:00:00Z");
   });
 
   test("collapses excessive blank lines after marker removal", () => {
-    const raw = "Line one.\n\n\n<!-- FRYLER_TASK: {\"title\": \"X\"} -->\n\n\nLine two.";
+    const raw = 'Line one.\n\n\n<!-- FRYLER_TASK: {"title": "X"} -->\n\n\nLine two.';
     const result = parseClaudeResponse(raw);
     expect(result.cleanText).not.toMatch(/\n{3,}/);
     expect(result.cleanText).toContain("Line one.");

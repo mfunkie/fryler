@@ -42,10 +42,14 @@ async function startRepl(options?: ReplOptions): Promise<void> {
 
     // Slash commands
     if (input.startsWith("/")) {
-      const handled = handleSlashCommand(input, () => {
-        sessionId = null;
-        messageCount = 0;
-      }, sessionId);
+      const handled = handleSlashCommand(
+        input,
+        () => {
+          sessionId = null;
+          messageCount = 0;
+        },
+        sessionId,
+      );
       if (handled === "quit") break;
       if (handled === "handled") continue;
       // "unknown" falls through to print error
@@ -115,10 +119,7 @@ async function startRepl(options?: ReplOptions): Promise<void> {
         await processMarkers(fullResult);
       }
     } catch (err) {
-      console.error(
-        "\nError:",
-        err instanceof Error ? err.message : String(err),
-      );
+      console.error("\nError:", err instanceof Error ? err.message : String(err));
       console.log();
     }
   }
@@ -148,9 +149,7 @@ function handleSlashCommand(
   }
 
   if (cmd === "/session") {
-    console.log(
-      sessionId ? `Session: ${sessionId}` : "No active session",
-    );
+    console.log(sessionId ? `Session: ${sessionId}` : "No active session");
     console.log();
     return "handled";
   }

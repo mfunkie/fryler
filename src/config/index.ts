@@ -25,9 +25,7 @@ export function getDefaultConfig(): FrylerConfig {
   };
 }
 
-export function parseTOML(
-  content: string,
-): Record<string, string | number | boolean> {
+export function parseTOML(content: string): Record<string, string | number | boolean> {
   const result: Record<string, string | number | boolean> = {};
   let currentSection = "";
 
@@ -91,12 +89,9 @@ export function parseTOML(
   return result;
 }
 
-export async function loadConfig(
-  configPath?: string,
-): Promise<FrylerConfig> {
+export async function loadConfig(configPath?: string): Promise<FrylerConfig> {
   const defaults = getDefaultConfig();
-  const resolvedPath =
-    configPath ?? join(homedir(), ".fryler", "config.toml");
+  const resolvedPath = configPath ?? join(homedir(), ".fryler", "config.toml");
 
   let content: string;
   try {

@@ -35,10 +35,4 @@ async function getIdentityContext(): Promise<string> {
   return `=== FRYLER IDENTITY (SOUL.md) ===\n${soul}\n\n=== FRYLER MEMORY (MEMORY.md) ===\n${memory}`;
 }
 
-export {
-  getProjectRoot,
-  readSoul,
-  readMemory,
-  appendMemory,
-  getIdentityContext,
-};
+export { getProjectRoot, readSoul, readMemory, appendMemory, getIdentityContext };
