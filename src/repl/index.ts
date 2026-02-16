@@ -91,6 +91,7 @@ export async function startRepl(options?: ReplOptions): Promise<void> {
             }
             // New assistant turn (after tool use) — text resets, so reset our counter
             if (currentText.length < lastTextLength) {
+              process.stdout.write("\n\n");
               lastTextLength = 0;
             }
             // Print only new characters since last update
