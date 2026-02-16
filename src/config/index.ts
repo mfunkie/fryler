@@ -10,6 +10,7 @@ export interface FrylerConfig {
   log_level: "debug" | "info" | "warn" | "error";
   container_image: string;
   container_name: string;
+  container_memory: string;
   data_dir: string;
   claude_model: string;
   claude_max_turns: number;
@@ -21,6 +22,7 @@ export function getDefaultConfig(): FrylerConfig {
     log_level: "info",
     container_image: "fryler:latest",
     container_name: "fryler-runtime",
+    container_memory: "4GB",
     data_dir: join(homedir(), ".fryler", "data"),
     claude_model: "sonnet",
     claude_max_turns: 25,

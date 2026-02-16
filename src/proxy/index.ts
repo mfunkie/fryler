@@ -187,6 +187,7 @@ export async function hostStart(config: FrylerConfig): Promise<void> {
   await startContainer({
     image: config.container_image,
     name: config.container_name,
+    memory: config.container_memory,
     volumes,
     command: ["fryler", "start"],
   });
