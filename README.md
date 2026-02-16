@@ -137,7 +137,7 @@ Create `~/.fryler/config.toml`:
 ```toml
 heartbeat_interval_seconds = 60
 log_level = "info"
-container_image = "fryler:latest"
+container_image = "fryler:latest"  # built automatically from Dockerfile
 container_name = "fryler-runtime"
 claude_model = "sonnet"
 claude_max_turns = 25

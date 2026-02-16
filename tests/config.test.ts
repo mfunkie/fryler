@@ -9,7 +9,7 @@ describe("getDefaultConfig", () => {
     const config = getDefaultConfig();
     expect(config.heartbeat_interval_seconds).toBe(60);
     expect(config.log_level).toBe("info");
-    expect(config.container_image).toBe("fry-claude:latest");
+    expect(config.container_image).toBe("fryler:latest");
     expect(config.container_name).toBe("fryler-runtime");
     expect(config.data_dir).toContain(".fryler/data");
     expect(config.claude_model).toBe("sonnet");
@@ -127,7 +127,7 @@ describe("loadConfig", () => {
     expect(config.claude_max_turns).toBe(50);
     // Defaults should still be present for unset keys
     expect(config.heartbeat_interval_seconds).toBe(60);
-    expect(config.container_image).toBe("fry-claude:latest");
+    expect(config.container_image).toBe("fryler:latest");
     expect(config.container_name).toBe("fryler-runtime");
     expect(config.claude_model).toBe("sonnet");
   });

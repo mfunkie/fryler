@@ -19,7 +19,7 @@ export function getDefaultConfig(): FrylerConfig {
   return {
     heartbeat_interval_seconds: 60,
     log_level: "info",
-    container_image: "fry-claude:latest",
+    container_image: "fryler:latest",
     container_name: "fryler-runtime",
     data_dir: join(homedir(), ".fryler", "data"),
     claude_model: "sonnet",

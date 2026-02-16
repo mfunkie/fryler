@@ -103,6 +103,7 @@ async function bootstrapLogin(config: FrylerConfig, volumes: string[]): Promise<
     command: ["/bin/sh", "-c", "sleep infinity"],
   });
 
+  let loginFailed = false;
   try {
     // Run interactive login inside the temp container
     const proc = Bun.spawn(["container", "exec", "-it", tempName, "fryler", "login"], {
@@ -113,14 +114,18 @@ async function bootstrapLogin(config: FrylerConfig, volumes: string[]): Promise<
     const exitCode = await proc.exited;
 
     if (exitCode !== 0) {
-      console.error("\nLogin failed. Run 'fryler login' to try again.");
-      process.exit(1);
+      loginFailed = true;
+    } else {
+      console.log("\nAuthentication complete.");
     }
-
-    console.log("\nAuthentication complete.");
   } finally {
     // Clean up temp container
     await destroyContainer(tempName);
+  }
+
+  if (loginFailed) {
+    console.error("\nLogin failed. Run 'fryler login' to try again.");
+    process.exit(1);
   }
 }
 
