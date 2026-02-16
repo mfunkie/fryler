@@ -15,6 +15,7 @@ import { logger } from "@/logger/index.ts";
 
 interface ReplOptions {
   sessionId?: string;
+  autoResume?: boolean;
 }
 
 async function startRepl(options?: ReplOptions): Promise<void> {
@@ -62,11 +63,11 @@ async function startRepl(options?: ReplOptions): Promise<void> {
     // Send to Claude with streaming
     try {
       const askOpts: AskOptions = {};
-      if (hasExchanged) {
-        // After the first exchange, use --continue to avoid session lock conflicts
+      if (hasExchanged || options?.autoResume) {
+        // Use --continue to resume without session lock conflicts
         askOpts.continueSession = true;
       } else if (sessionId) {
-        // Resuming a specific session for the first time this REPL run
+        // Explicit session ID (e.g., fryler resume <id>)
         askOpts.sessionId = sessionId;
       }
 

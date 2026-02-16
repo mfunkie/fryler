@@ -211,15 +211,15 @@ async function cmdChat(): Promise<void> {
 
   getDb();
 
-  const opts: { sessionId?: string } = {};
+  const opts: { sessionId?: string; autoResume?: boolean } = {};
   if (values.session) {
     opts.sessionId = values.session as string;
   } else if (!values.new) {
-    // Auto-resume most recent chat session
+    // Auto-resume most recent chat session via --continue
     const sessions = listSessions();
     const chatSession = sessions.find((s) => s.title?.startsWith("[chat] "));
     if (chatSession) {
-      opts.sessionId = chatSession.claude_session_id;
+      opts.autoResume = true;
     }
   }
 
