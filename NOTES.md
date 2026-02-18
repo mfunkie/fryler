@@ -117,7 +117,7 @@
 ## Design Decisions for Fryler
 
 1. **Container naming**: Use `fryler-runtime` (deterministic, as spec requires)
-2. **Image**: Build `fryler:latest` from `fry-claude:latest` base + Bun + fryler source
+2. **Image**: Build `fryler:latest` from `ubuntu:24.04` (self-contained — Claude CLI + Bun + fryler source all installed in the Dockerfile)
 3. **Claude invocation**: Always use `-p` with `--output-format stream-json` for REPL streaming, `--output-format json` for heartbeat tasks
 4. **System prompt**: Use `--system-prompt` to inject SOUL.md content + MEMORY.md context
 5. **Session tracking**: SQLite-based (unlike fry's file-based approach)

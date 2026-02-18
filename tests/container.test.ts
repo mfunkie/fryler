@@ -7,8 +7,8 @@ describe("container manager", () => {
     expect(available).toBe(true);
   });
 
-  test("imageExists finds fry-claude:latest", async () => {
-    const exists = await imageExists("fry-claude:latest");
+  test("imageExists finds fryler:latest", async () => {
+    const exists = await imageExists("fryler:latest");
     expect(exists).toBe(true);
   });
 

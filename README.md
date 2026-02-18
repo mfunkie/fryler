@@ -6,7 +6,6 @@ Autonomous AI daemon for macOS. Runs inside an Apple container, executes queued 
 
 - [Bun](https://bun.sh) v1.2+
 - macOS with Apple container support (`/usr/local/bin/container`)
-- Base image: `fry-claude:latest` (Ubuntu + Claude CLI — provides `claude` inside the container)
 
 ## Install
 

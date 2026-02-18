@@ -1,11 +1,22 @@
-FROM fry-claude:latest
+FROM ubuntu:24.04
+
+# System packages (base + fryler-specific, merged into one layer)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    git \
+    ripgrep \
+    build-essential \
+    unzip \
+    sqlite3 \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install Claude CLI, then symlink to /usr/local/bin so the fryler user can access it
+RUN curl -fsSL https://claude.ai/install.sh | bash \
+  && ln -s /root/.local/bin/claude /usr/local/bin/claude
 
 # Create non-root user
 RUN useradd -m -s /bin/bash fryler
-
-# Install unzip (required by Bun installer)
-RUN apt-get update && apt-get install -y --no-install-recommends unzip sqlite3 \
-    && rm -rf /var/lib/apt/lists/*
 
 # Install Bun as the fryler user
 USER fryler
