@@ -30,7 +30,8 @@ export function getDb(): Database {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       completed_at TEXT,
-      result TEXT
+      result TEXT,
+      cwd TEXT
     );
 
     CREATE TABLE IF NOT EXISTS memories (
@@ -50,6 +51,13 @@ export function getDb(): Database {
       message_count INTEGER NOT NULL DEFAULT 0
     );
   `);
+
+  // Migration: add cwd column to tasks for existing databases
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN cwd TEXT");
+  } catch {
+    // Column already exists
+  }
 
   return db;
 }

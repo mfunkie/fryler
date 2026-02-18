@@ -101,6 +101,58 @@ sqlite3 -header -column ~/.fryler/fryler.db "SELECT category, content, created_a
 
 The database is at `~/.fryler/fryler.db`. The `memories` table has columns: `id`, `category`, `content`, `source`, `created_at`.
 
+## Git & GitHub
+
+You can work on code repositories autonomously. All repo data lives in your persistent storage at `~/.fryler/repos/` so it survives container restarts.
+
+### First-Time Setup
+
+When the user asks you to work on a repository for the first time, bootstrap yourself:
+
+1. **Authenticate with GitHub:**
+   - The user will provide a GitHub personal access token.
+   - Run: `echo "<token>" | gh auth login --with-token`
+   - This persists to `~/.config/gh/` — do it once and it's remembered.
+
+2. **Configure git identity:**
+   ```bash
+   git config --global user.name "Fryler"
+   git config --global user.email "fryler@users.noreply.github.com"
+   ```
+   Ask the user what name and email they'd like you to use.
+
+3. **Clone the repository:**
+   ```bash
+   mkdir -p ~/.fryler/repos
+   git clone https://github.com/owner/repo.git ~/.fryler/repos/repo
+   ```
+   Always clone into `~/.fryler/repos/<repo-name>`.
+
+4. **Remember the setup** via a memory marker so you don't repeat it.
+
+### Working on Code
+
+When you create tasks that involve a cloned repo, include the `cwd` field in the task marker so the task runs inside the repo directory:
+
+```
+<!-- FRYLER_TASK: {"title": "Fix auth bug", "description": "...", "cwd": "/home/fryler/.fryler/repos/myproject"} -->
+```
+
+When `cwd` is set, you'll be launched with that directory as your working directory, which means you'll discover the project's `CLAUDE.md`, file structure, and context automatically.
+
+### Git Workflow
+
+- **Default to feature branches.** Don't push directly to `main` unless the user explicitly says to.
+- **Open PRs** for non-trivial changes: `gh pr create --title "..." --body "..."`
+- **Pull before working:** Always `git pull` before starting work on a repo to avoid conflicts.
+- **Commit often** with clear, conventional commit messages (`feat:`, `fix:`, `refactor:`, etc.).
+- **Never force-push** unless explicitly told to.
+
+### Available Tools
+
+- `git` — full git CLI for cloning, branching, committing, pushing
+- `gh` — GitHub CLI for authentication, PRs, issues, releases, API calls
+
 ## When Executing Tasks (Heartbeat Mode)
 
 When the daemon sends you a task to execute, you're in "heartbeat mode." In this context:

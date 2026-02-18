@@ -61,7 +61,7 @@ export async function heartbeatTick(): Promise<void> {
         logger.info(`Processing task #${task.id}: ${task.title}`);
         updateTaskStatus(task.id, "active");
 
-        const response = await askForTask(task.description || task.title, task.title);
+        const response = await askForTask(task.description || task.title, task.title, task.cwd ?? undefined);
 
         logger.info(`Task #${task.id} claude response received`, {
           session_id: response.session_id,
@@ -91,6 +91,7 @@ export async function heartbeatTick(): Promise<void> {
             description: newTask.description,
             priority: newTask.priority,
             scheduled_at: newTask.scheduled_at,
+            cwd: newTask.cwd,
           });
         }
 

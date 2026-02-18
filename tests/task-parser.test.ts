@@ -226,6 +226,31 @@ describe("parseClaudeResponse", () => {
     expect(result.tasks[0]!.description).toBe("");
   });
 
+  test("parses cwd field from task marker", () => {
+    const raw =
+      '<!-- FRYLER_TASK: {"title": "Fix bug", "cwd": "/home/fryler/.fryler/repos/myproject"} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.tasks[0]!.cwd).toBe("/home/fryler/.fryler/repos/myproject");
+  });
+
+  test("defaults cwd to null when missing", () => {
+    const raw = '<!-- FRYLER_TASK: {"title": "No cwd"} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.tasks[0]!.cwd).toBeNull();
+  });
+
+  test("defaults cwd to null when empty string", () => {
+    const raw = '<!-- FRYLER_TASK: {"title": "Empty cwd", "cwd": ""} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.tasks[0]!.cwd).toBeNull();
+  });
+
+  test("defaults cwd to null when whitespace-only", () => {
+    const raw = '<!-- FRYLER_TASK: {"title": "Blank cwd", "cwd": "   "} -->';
+    const result = parseClaudeResponse(raw);
+    expect(result.tasks[0]!.cwd).toBeNull();
+  });
+
   test("skips memory with missing category", () => {
     const warnSpy = spyOn(logger, "warn").mockImplementation(() => {});
     const raw = '<!-- FRYLER_MEMORY: {"content": "Has content but no category"} -->';

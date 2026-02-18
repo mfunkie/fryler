@@ -25,6 +25,7 @@ export interface AskOptions {
   systemPrompt?: string;
   injectIdentity?: boolean;
   noSessionPersistence?: boolean;
+  cwd?: string;
 }
 
 export interface StreamEvent {
@@ -139,7 +140,7 @@ export async function ask(prompt: string, options?: AskOptions): Promise<ClaudeR
     stdout: "pipe",
     stderr: "pipe",
     env: buildClaudeEnv(),
-    cwd: homedir(),
+    cwd: options?.cwd ?? homedir(),
   });
 
   const stdout = await new Response(proc.stdout).text();
@@ -180,7 +181,7 @@ export async function* askStreaming(
     stdout: "pipe",
     stderr: "pipe",
     env: buildClaudeEnv(),
-    cwd: homedir(),
+    cwd: options?.cwd ?? homedir(),
   });
 
   const reader = proc.stdout.getReader();
@@ -240,6 +241,7 @@ export async function* askStreaming(
 export async function askForTask(
   taskDescription: string,
   context?: string,
+  cwd?: string,
 ): Promise<ClaudeResponse> {
   const identityContext = await getIdentityContext();
   const contextBlock = context ? `\n\n=== ADDITIONAL CONTEXT ===\n${context}` : "";
@@ -250,11 +252,12 @@ export async function askForTask(
     `Execute the following task thoroughly and return your results. ` +
     `Be concise but complete.`;
 
-  logger.info("claude askForTask", { task: taskDescription.slice(0, 100) });
+  logger.info("claude askForTask", { task: taskDescription.slice(0, 100), cwd });
 
   return ask(taskDescription, {
     systemPrompt,
     injectIdentity: false,
     noSessionPersistence: true,
+    cwd,
   });
 }

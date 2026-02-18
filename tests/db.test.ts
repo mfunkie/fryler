@@ -129,6 +129,22 @@ describe("Tasks", () => {
     updateTaskStatus(task.id, "active");
     expect(cancelTask(task.id)).toBe(false);
   });
+
+  test("create with cwd", () => {
+    const task = createTask({
+      title: "Repo task",
+      cwd: "/home/fryler/.fryler/repos/myproject",
+    });
+    expect(task.cwd).toBe("/home/fryler/.fryler/repos/myproject");
+
+    const fetched = getTask(task.id)!;
+    expect(fetched.cwd).toBe("/home/fryler/.fryler/repos/myproject");
+  });
+
+  test("cwd defaults to null when not provided", () => {
+    const task = createTask({ title: "No cwd task" });
+    expect(task.cwd).toBeNull();
+  });
 });
 
 describe("Memories", () => {

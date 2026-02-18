@@ -9,6 +9,7 @@ export interface ParsedTask {
   description: string;
   priority: number;
   scheduled_at: string | null;
+  cwd: string | null;
 }
 
 export interface ParsedMemory {
@@ -77,6 +78,7 @@ function validateTask(raw: unknown): ParsedTask | null {
     description: typeof obj.description === "string" ? obj.description : "",
     priority,
     scheduled_at: typeof obj.scheduled_at === "string" ? obj.scheduled_at : null,
+    cwd: typeof obj.cwd === "string" && obj.cwd.trim() !== "" ? obj.cwd : null,
   };
 }
 

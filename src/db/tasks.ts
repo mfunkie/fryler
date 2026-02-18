@@ -11,6 +11,7 @@ export interface Task {
   updated_at: string;
   completed_at: string | null;
   result: string | null;
+  cwd: string | null;
 }
 
 export interface CreateTaskInput {
@@ -18,19 +19,21 @@ export interface CreateTaskInput {
   description?: string;
   priority?: number;
   scheduled_at?: string | null;
+  cwd?: string | null;
 }
 
 export function createTask(input: CreateTaskInput): Task {
   const db = getDb();
   const stmt = db.prepare(
-    `INSERT INTO tasks (title, description, priority, scheduled_at)
-     VALUES ($title, $description, $priority, $scheduled_at)`,
+    `INSERT INTO tasks (title, description, priority, scheduled_at, cwd)
+     VALUES ($title, $description, $priority, $scheduled_at, $cwd)`,
   );
   const result = stmt.run({
     $title: input.title,
     $description: input.description ?? "",
     $priority: input.priority ?? 3,
     $scheduled_at: input.scheduled_at ?? null,
+    $cwd: input.cwd ?? null,
   });
   return getTask(Number(result.lastInsertRowid))!;
 }
