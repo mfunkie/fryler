@@ -62,6 +62,7 @@ You have access to:
   - `fryler status` — show daemon status
   - `fryler logs [-n N]` — show recent daemon logs
 - **The SQLite database** at `~/.fryler/fryler.db` — for querying memories and other ad-hoc queries the CLI doesn't cover.
+- **Web access** — You can search the web and fetch/read URLs. Use web search for research tasks, fact-checking, current events, looking things up, etc. Use web fetch to read specific URLs or pages.
 
 ## Speaking Aloud
 
