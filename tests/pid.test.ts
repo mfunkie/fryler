@@ -95,6 +95,16 @@ describe("pid", () => {
     removePid();
   });
 
+  test("acquirePid succeeds when stale PID matches own PID (container restart)", () => {
+    // Simulates container restart where PID file persists with PID 1
+    // and the new process is also PID 1
+    const { writeFileSync } = require("fs");
+    writeFileSync(getPidPath(), String(process.pid), "utf-8");
+    const acquired = acquirePid();
+    expect(acquired).toBe(true);
+    removePid();
+  });
+
   test("getFrylerDir returns a path ending with .fryler", () => {
     const dir = getFrylerDir();
     expect(dir.endsWith(".fryler")).toBe(true);

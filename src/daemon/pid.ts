@@ -54,7 +54,9 @@ export function removePid(): void {
 export function acquirePid(): boolean {
   const existingPid = readPid();
   if (existingPid !== null) {
-    if (isRunning(existingPid)) {
+    // If the stale PID matches our own (e.g. PID 1 across container restarts),
+    // it's safe to take over — we are that process.
+    if (existingPid !== process.pid && isRunning(existingPid)) {
       return false;
     }
     removePid();
