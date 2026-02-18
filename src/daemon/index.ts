@@ -65,7 +65,14 @@ export async function startDaemon(): Promise<void> {
     });
 
     daemonRunning = true;
-    logger.info("fryler daemon is running", { pid: process.pid });
+
+    const mem = process.memoryUsage();
+    logger.info("fryler daemon is running", {
+      pid: process.pid,
+      rss_mb: Math.round(mem.rss / 1024 / 1024),
+      heap_used_mb: Math.round(mem.heapUsed / 1024 / 1024),
+      heap_total_mb: Math.round(mem.heapTotal / 1024 / 1024),
+    });
 
     // Keep the process alive
     await new Promise(() => {
